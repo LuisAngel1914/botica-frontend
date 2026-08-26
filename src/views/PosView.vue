@@ -291,7 +291,7 @@ const router = useRouter();
 // Usuario y Roles
 const usuario = ref(JSON.parse(localStorage.getItem('usuario') || '{}'));
 
-// Evaluación flexible de admin
+// Evaluación flexible de admin (acepta admin, administrador o roles en mayúsculas)
 const esAdmin = computed(() => {
   const rol = (usuario.value.role || usuario.value.rol || '').toLowerCase();
   return rol === 'admin' || rol === 'administrador';
@@ -505,7 +505,6 @@ const procesarVenta = async () => {
     await obtenerProductos();
 
     if (ventaId) {
-      // Usar la base URL configurada en axios en lugar de hardcodear localhost
       const baseURL = api.defaults.baseURL || 'https://botica-backend-production.up.railway.app/api';
       window.open(`${baseURL}/ventas/${ventaId}/ticket`, '_blank');
     }
@@ -516,17 +515,15 @@ const procesarVenta = async () => {
   }
 };
 
-// CERRAR SESIÓN CORREGIDO (Evita error de consola y borra credenciales siempre)
+// CERRAR SESIÓN AJUSTADO Y CORREGIDO
 const cerrarSesion = async () => {
   try {
     await api.post('/logout');
   } catch (err) {
-    console.warn('Sesión caducada o token inválido en servidor:', err);
+    console.warn('El token caducó o ya no es válido:', err);
   } finally {
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario');
-    localStorage.removeItem('user');
-    router.push('/login');
+    localStorage.clear();
+    router.push('/'); // Redirección a la ruta login ('/') definida en index.js
   }
 };
 
