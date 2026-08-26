@@ -278,6 +278,9 @@
         </div>
       </div>
     </div>
+
+    <!-- WIDGET FLOTANTE DE ASISTENTE IA -->
+    <ChatIaModal />
   </div>
 </template>
 
@@ -285,6 +288,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../api/axios';
+import ChatIaModal from '../components/ChatIaModal.vue';
 
 const router = useRouter();
 
@@ -329,7 +333,7 @@ const obtenerProductos = async () => {
     productos.value = res.data.data || res.data;
   } catch (err) {
     console.error('Error al cargar productos:', err);
-  } finally {
+  } font-medium; finally {
     cargandoProductos.value = false;
   }
 };
@@ -515,7 +519,7 @@ const procesarVenta = async () => {
   }
 };
 
-// CERRAR SESIÓN AJUSTADO Y CORREGIDO
+// CERRAR SESIÓN
 const cerrarSesion = async () => {
   try {
     await api.post('/logout');
@@ -523,7 +527,7 @@ const cerrarSesion = async () => {
     console.warn('El token caducó o ya no es válido:', err);
   } finally {
     localStorage.clear();
-    router.push('/'); // Redirección a la ruta login ('/') definida en index.js
+    router.push('/');
   }
 };
 
