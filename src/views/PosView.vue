@@ -333,7 +333,7 @@ const obtenerProductos = async () => {
     productos.value = res.data.data || res.data;
   } catch (err) {
     console.error('Error al cargar productos:', err);
-  } font-medium; finally {
+  } finally {
     cargandoProductos.value = false;
   }
 };

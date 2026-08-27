@@ -44,8 +44,8 @@
         </div>
 
         <div v-if="cargando" class="flex justify-start">
-          <div class="bg-white border border-gray-200 p-2.5 rounded-r-xl rounded-tl-xl text-gray-400 animate-pulse italic">
-            Consultando a la IA...
+          <div class="bg-white border border-gray-200 p-2.5 rounded-r-xl rounded-tl-xl text-gray-400 animate-pulse italic flex items-center gap-2">
+            <span>🤖</span> Consultando a la IA...
           </div>
         </div>
       </div>
@@ -96,15 +96,20 @@ const enviarMensaje = async () => {
   const txt = nuevoMensaje.value.trim();
   if (!txt || cargando.value) return;
 
+  // Agregar mensaje del usuario a la lista
   mensajes.value.push({ rol: 'user', texto: txt });
   nuevoMensaje.value = '';
   cargando.value = true;
   await scrollToBottom();
 
   try {
-    const res = await api.post('/chat', { mensaje: txt });
+    // ✅ CORRECCIÓN CLAVE: Se añade el prefijo /api que requiere Laravel
+    const res = await api.post('/api/chat', { mensaje: txt });
+    
+    // Guardar respuesta del asistente
     mensajes.value.push({ rol: 'ia', texto: res.data.respuesta });
   } catch (err) {
+    console.error('Error al consultar chat:', err);
     mensajes.value.push({ 
       rol: 'ia', 
       texto: '⚠️ Ocurrió un error al consultar con el asistente. Intenta de nuevo.' 
