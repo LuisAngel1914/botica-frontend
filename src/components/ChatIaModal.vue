@@ -96,17 +96,14 @@ const enviarMensaje = async () => {
   const txt = nuevoMensaje.value.trim();
   if (!txt || cargando.value) return;
 
-  // Agregar mensaje del usuario a la lista
   mensajes.value.push({ rol: 'user', texto: txt });
   nuevoMensaje.value = '';
   cargando.value = true;
   await scrollToBottom();
 
   try {
-    // ✅ CORRECCIÓN CLAVE: Se añade el prefijo /api que requiere Laravel
-    const res = await api.post('/api/chat', { mensaje: txt });
-    
-    // Guardar respuesta del asistente
+    // Al usar '/chat', axios lo combina correctamente con el baseURL convirtiéndolo en 'https://miapp.alwaysdata.net/api/chat'
+    const res = await api.post('/chat', { mensaje: txt });
     mensajes.value.push({ rol: 'ia', texto: res.data.respuesta });
   } catch (err) {
     console.error('Error al consultar chat:', err);
