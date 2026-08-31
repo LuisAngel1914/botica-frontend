@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://miapp.alwaysdata.net/api',
+    baseURL: 'https://botica-backend-production.up.railway.app/api',
     headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
