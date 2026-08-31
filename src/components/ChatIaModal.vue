@@ -102,7 +102,6 @@ const enviarMensaje = async () => {
   await scrollToBottom();
 
   try {
-    // Al usar '/chat', axios lo combina correctamente con el baseURL convirtiéndolo en 'https://miapp.alwaysdata.net/api/chat'
     const res = await api.post('/chat', { mensaje: txt });
     mensajes.value.push({ rol: 'ia', texto: res.data.respuesta });
   } catch (err) {
