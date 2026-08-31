@@ -102,14 +102,27 @@ const enviarMensaje = async () => {
   await scrollToBottom();
 
   try {
+    // Intento 1: Endpoint estándar relativo
     const res = await api.post('/chat', { mensaje: txt });
     mensajes.value.push({ rol: 'ia', texto: res.data.respuesta });
-  } catch (err) {
-    console.error('Error al consultar chat:', err);
-    mensajes.value.push({ 
-      rol: 'ia', 
-      texto: '⚠️ Ocurrió un error al consultar con el asistente. Intenta de nuevo.' 
-    });
+  } catch (err1) {
+    try {
+      // Intento 2: Endpoint protegido
+      const resAuth = await api.post('/chat-auth', { mensaje: txt });
+      mensajes.value.push({ rol: 'ia', texto: resAuth.data.respuesta });
+    } catch (err2) {
+      try {
+        // Intento 3: URL Absoluta directa a Railway
+        const resDirect = await api.post('https://botica-backend-production.up.railway.app/api/chat', { mensaje: txt });
+        mensajes.value.push({ rol: 'ia', texto: resDirect.data.respuesta });
+      } catch (err3) {
+        console.error('Error final en chat:', err3);
+        mensajes.value.push({ 
+          rol: 'ia', 
+          texto: '⚠️ Ocurrió un error al consultar con el asistente. Intenta de nuevo.' 
+        });
+      }
+    }
   } finally {
     cargando.value = false;
     await scrollToBottom();
