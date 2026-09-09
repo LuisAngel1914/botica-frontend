@@ -147,6 +147,17 @@ async function checkCashRegisterAndSell() {
   }
   await processSale();
 }
+async function downloadTicket(saleId) {
+  try {
+    const response = await api.get('/ventas/' + saleId + '/ticket', { responseType: 'blob' });
+    const url = URL.createObjectURL(new Blob([response.data], { type: 'text/html' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'ticket-' + saleId + '.html';
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch { notify('La venta fue registrada, pero no se pudo descargar el ticket.', 'error'); }
+}
 async function processSale() {
   processing.value = true;
   try {
@@ -168,7 +179,7 @@ async function processSale() {
     documentNumber.value = '';
     await loadProducts();
     notify('Venta registrada correctamente.');
-    if (saleId) window.open((api.defaults.baseURL || '') + '/ventas/' + saleId + '/ticket', '_blank', 'noopener');
+    if (saleId) await downloadTicket(saleId);
   } catch (error) {
     notify(error.response?.data?.message || 'No fue posible registrar la venta.', 'error');
   } finally {
