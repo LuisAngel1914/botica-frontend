@@ -1,139 +1,93 @@
 <template>
   <div class="space-y-6">
-    <div class="max-w-7xl mx-auto">
-      
-      <PageHeader eyebrow="Catálogo y abastecimiento" title="Inventario y lotes" description="Administra existencias, precios, vencimientos y productos bajo receta.">
+    <div class="mx-auto max-w-7xl">
+      <PageHeader eyebrow="Catálogo y abastecimiento" title="Inventario y lotes" description="Administra existencias, precios, vencimientos, imágenes y productos bajo receta.">
         <template #actions><button class="btn btn-primary" @click="abrirModalProducto()">Nuevo producto</button></template>
       </PageHeader>
 
-      <!-- TABLA DE PRODUCTOS (Scroll Horizontal en Movil) -->
-      <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+      <div class="mb-8 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm min-w-[700px]">
-            <thead class="bg-gray-800 text-white text-xs uppercase tracking-wider">
+          <table class="w-full min-w-[760px] text-left text-sm">
+            <thead class="bg-slate-950 text-xs uppercase tracking-wider text-slate-300">
               <tr>
-                <th class="p-3">Código</th>
                 <th class="p-3">Producto</th>
+                <th class="p-3">Código</th>
                 <th class="p-3">Presentación</th>
                 <th class="p-3 text-center">Receta</th>
-                <th class="p-3 text-center">Stock Total</th>
-                <th class="p-3 text-right">Precio Venta</th>
+                <th class="p-3 text-center">Stock</th>
+                <th class="p-3 text-right">Precio</th>
                 <th class="p-3 text-center">Acciones</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr v-for="prod in productos" :key="prod.id" class="hover:bg-gray-50 transition">
-                <td class="p-3 text-xs font-mono text-gray-500 whitespace-nowrap">{{ prod.codigo_barras || '-' }}</td>
-                <td class="p-3 font-bold text-gray-800">{{ prod.nombre }}</td>
-                <td class="p-3 text-xs text-gray-600 whitespace-nowrap">{{ prod.presentacion || '-' }}</td>
-                <td class="p-3 text-center whitespace-nowrap">
-                  <span 
-                    :class="prod.requiere_receta ? 'bg-red-100 text-red-700 font-bold' : 'bg-gray-100 text-gray-500'" 
-                    class="text-[10px] px-2 py-0.5 rounded-full inline-block"
-                  >
-                    {{ prod.requiere_receta ? 'Sí (💊 Receta)' : 'No' }}
-                  </span>
+            <tbody class="divide-y divide-slate-100">
+              <tr v-for="prod in productos" :key="prod.id" class="transition hover:bg-slate-50">
+                <td class="p-3">
+                  <div class="flex min-w-[190px] items-center gap-3">
+                    <div class="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-cyan-50 text-xs font-bold text-cyan-700">
+                      <img v-if="prod.imagen_url && !brokenImageIds.has(prod.id)" :src="prod.imagen_url" :alt="prod.nombre" class="h-full w-full object-cover" @error="hideBrokenImage(prod.id)" />
+                      <span v-else>{{ initials(prod.nombre) }}</span>
+                    </div>
+                    <div><p class="font-bold text-slate-800">{{ prod.nombre }}</p><p class="text-xs text-slate-500">{{ prod.principio_activo || 'Sin principio activo' }}</p></div>
+                  </div>
                 </td>
-                <td class="p-3 text-center font-bold whitespace-nowrap" :class="prod.stock_actual > 5 ? 'text-green-600' : 'text-red-600'">
-                  {{ prod.stock_actual }}
+                <td class="whitespace-nowrap p-3 font-mono text-xs text-slate-500">{{ prod.codigo_barras || '-' }}</td>
+                <td class="whitespace-nowrap p-3 text-xs text-slate-600">{{ prod.presentacion || '-' }}</td>
+                <td class="whitespace-nowrap p-3 text-center">
+                  <span :class="prod.requiere_receta ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-500'" class="inline-block rounded-full px-2 py-0.5 text-[10px] font-bold">{{ prod.requiere_receta ? 'Con receta' : 'Libre' }}</span>
                 </td>
-                <td class="p-3 text-right font-bold text-blue-600 whitespace-nowrap">S/ {{ Number(prod.precio_venta).toFixed(2) }}</td>
-                <td class="p-3 text-center whitespace-nowrap">
+                <td class="whitespace-nowrap p-3 text-center font-bold" :class="prod.stock_actual > 5 ? 'text-emerald-600' : 'text-red-600'">{{ prod.stock_actual }}</td>
+                <td class="whitespace-nowrap p-3 text-right font-bold text-cyan-700">S/ {{ Number(prod.precio_venta).toFixed(2) }}</td>
+                <td class="whitespace-nowrap p-3 text-center">
                   <div class="flex justify-center gap-1.5">
-                    <button @click="abrirModalLote(prod)" class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-2.5 py-1 rounded font-semibold transition">
-                      + Lote
-                    </button>
-                    <button @click="abrirModalProducto(prod)" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-2.5 py-1 rounded font-semibold transition">
-                      ✏️ Editar
-                    </button>
+                    <button class="rounded-lg bg-violet-600 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-violet-700" @click="abrirModalLote(prod)">+ Lote</button>
+                    <button class="rounded-lg bg-amber-400 px-2.5 py-1 text-xs font-semibold text-slate-900 transition hover:bg-amber-500" @click="abrirModalProducto(prod)">Editar</button>
                   </div>
                 </td>
               </tr>
-              <tr v-if="productos.length === 0">
-                <td colspan="7" class="text-center py-8 text-gray-400">No hay productos registrados en el inventario.</td>
-              </tr>
+              <tr v-if="productos.length === 0"><td colspan="7" class="py-10 text-center text-slate-400">No hay productos registrados en el inventario.</td></tr>
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
 
-    <!-- MODAL CREAR / EDITAR PRODUCTO RESPONSIVO -->
-    <div v-if="mostrarModalProd" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white p-5 sm:p-6 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">
-          {{ formProd.id ? 'Editar Producto' : 'Nuevo Producto' }}
-        </h3>
-        
+    <div v-if="mostrarModalProd" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+      <div class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-xl sm:p-6">
+        <h3 class="mb-4 text-lg font-bold text-slate-800">{{ formProd.id ? 'Editar producto' : 'Nuevo producto' }}</h3>
         <div class="space-y-3">
+          <div><label class="mb-1 block text-xs font-semibold text-slate-700">Nombre comercial</label><input v-model.trim="formProd.nombre" type="text" class="field-control" placeholder="Ej. Amoxicilina 500 mg" /></div>
+          <div><label class="mb-1 block text-xs font-semibold text-slate-700">Código de barras</label><input v-model.trim="formProd.codigo_barras" type="text" class="field-control" placeholder="Opcional" /></div>
+          <div><label class="mb-1 block text-xs font-semibold text-slate-700">Presentación</label><input v-model.trim="formProd.presentacion" type="text" class="field-control" placeholder="Ej. Caja x 100 tabletas" /></div>
           <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Nombre Comercial:</label>
-            <input v-model="formProd.nombre" type="text" class="w-full p-2 border border-gray-300 rounded text-xs sm:text-sm outline-none focus:border-blue-500" placeholder="Ej. Amoxicilina 500mg" />
+            <label class="mb-1 block text-xs font-semibold text-slate-700">URL de imagen oficial</label>
+            <input v-model.trim="formProd.imagen_url" type="url" class="field-control" placeholder="https://…" />
+            <p class="mt-1 text-[11px] text-slate-500">Usa una imagen oficial del fabricante o una foto propia del empaque.</p>
           </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Código de Barras:</label>
-            <input v-model="formProd.codigo_barras" type="text" class="w-full p-2 border border-gray-300 rounded text-xs sm:text-sm outline-none focus:border-blue-500" placeholder="Opcional" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Presentación:</label>
-            <input v-model="formProd.presentacion" type="text" class="w-full p-2 border border-gray-300 rounded text-xs sm:text-sm outline-none focus:border-blue-500" placeholder="Ej. Caja x 100 tab" />
+          <div v-if="formProd.imagen_url" class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-2">
+            <img :src="formProd.imagen_url" alt="Vista previa del producto" class="mx-auto h-24 max-w-full rounded-lg object-contain" @error="formProd.imagen_url = ''" />
           </div>
           <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1">Precio Compra:</label>
-              <input v-model.number="formProd.precio_compra" type="number" step="0.10" class="w-full p-2 border border-gray-300 rounded text-xs sm:text-sm outline-none focus:border-blue-500" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1">Precio Venta:</label>
-              <input v-model.number="formProd.precio_venta" type="number" step="0.10" class="w-full p-2 border border-gray-300 rounded text-xs sm:text-sm outline-none focus:border-blue-500" />
-            </div>
+            <div><label class="mb-1 block text-xs font-semibold text-slate-700">Precio compra</label><input v-model.number="formProd.precio_compra" type="number" min="0" step="0.10" class="field-control" /></div>
+            <div><label class="mb-1 block text-xs font-semibold text-slate-700">Precio venta</label><input v-model.number="formProd.precio_venta" type="number" min="0" step="0.10" class="field-control" /></div>
           </div>
-          
-          <!-- CHECKBOX VENTA BAJO RECETA -->
-          <div class="flex items-center gap-2 bg-red-50 p-2.5 rounded border border-red-200 mt-2">
-            <input id="recetaCheck" v-model="formProd.requiere_receta" type="checkbox" class="w-4 h-4 text-red-600 rounded cursor-pointer" />
-            <label for="recetaCheck" class="text-xs font-bold text-red-700 cursor-pointer select-none">
-              💊 ¿Requiere Receta Médica?
-            </label>
-          </div>
+          <label class="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3"><input id="recetaCheck" v-model="formProd.requiere_receta" type="checkbox" class="h-4 w-4 rounded text-red-600" /><span class="text-xs font-bold text-red-700">Requiere receta médica</span></label>
         </div>
-
-        <div class="mt-5 flex gap-2 justify-end">
-          <button @click="mostrarModalProd = false" class="px-3 py-1.5 text-xs text-gray-600 font-semibold hover:bg-gray-100 rounded">Cancelar</button>
-          <button @click="guardarProducto" class="px-4 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded font-bold shadow">Guardar</button>
-        </div>
+        <div class="mt-5 flex justify-end gap-2"><button class="btn btn-secondary" @click="mostrarModalProd = false">Cancelar</button><button class="btn btn-primary" @click="guardarProducto">Guardar</button></div>
       </div>
     </div>
 
-    <!-- MODAL REGISTRO DE LOTE RESPONSIVO -->
-    <div v-if="mostrarModalLote" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white p-5 sm:p-6 rounded-xl shadow-xl w-full max-w-sm">
-        <h3 class="text-lg font-bold text-purple-700 mb-1">Ingresar Nuevo Lote</h3>
-        <p class="text-xs text-gray-500 mb-4">Producto: <strong>{{ prodSeleccionado?.nombre }}</strong></p>
-
+    <div v-if="mostrarModalLote" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+      <div class="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl sm:p-6">
+        <h3 class="mb-1 text-lg font-bold text-violet-700">Ingresar nuevo lote</h3>
+        <p class="mb-4 text-xs text-slate-500">Producto: <strong>{{ prodSeleccionado?.nombre }}</strong></p>
         <div class="space-y-3">
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Código de Lote:</label>
-            <input v-model="formLote.numero_lote" type="text" placeholder="Ej. LOT-2026-A" class="w-full p-2 border border-gray-300 rounded text-xs sm:text-sm outline-none focus:border-purple-500" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Cantidad a ingresar:</label>
-            <input v-model.number="formLote.stock_ingresado" type="number" min="1" class="w-full p-2 border border-gray-300 rounded text-xs sm:text-sm outline-none focus:border-purple-500" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Fecha de Vencimiento:</label>
-            <input v-model="formLote.fecha_vencimiento" type="date" class="w-full p-2 border border-gray-300 rounded text-xs sm:text-sm outline-none focus:border-purple-500" />
-          </div>
+          <div><label class="mb-1 block text-xs font-semibold text-slate-700">Código de lote</label><input v-model.trim="formLote.numero_lote" type="text" placeholder="Ej. LOT-2026-A" class="field-control" /></div>
+          <div><label class="mb-1 block text-xs font-semibold text-slate-700">Cantidad a ingresar</label><input v-model.number="formLote.stock_ingresado" type="number" min="1" class="field-control" /></div>
+          <div><label class="mb-1 block text-xs font-semibold text-slate-700">Fecha de vencimiento</label><input v-model="formLote.fecha_vencimiento" type="date" class="field-control" /></div>
         </div>
-
-        <div class="mt-5 flex gap-2 justify-end">
-          <button @click="mostrarModalLote = false" class="px-3 py-1.5 text-xs text-gray-600 font-semibold hover:bg-gray-100 rounded">Cancelar</button>
-          <button @click="guardarLote" class="px-4 py-1.5 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded font-bold shadow">Registrar Lote</button>
-        </div>
+        <div class="mt-5 flex justify-end gap-2"><button class="btn btn-secondary" @click="mostrarModalLote = false">Cancelar</button><button class="btn bg-violet-600 text-white hover:bg-violet-700" @click="guardarLote">Registrar lote</button></div>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -146,121 +100,68 @@ const productos = ref([]);
 const mostrarModalProd = ref(false);
 const mostrarModalLote = ref(false);
 const prodSeleccionado = ref(null);
+const brokenImageIds = ref(new Set());
 
-const formProd = ref({
-  id: null,
-  nombre: '',
-  codigo_barras: '',
-  presentacion: '',
-  precio_compra: 0,
-  precio_venta: 0,
-  stock_actual: 0,
-  stock_minimo: 5,
-  requiere_receta: false
-});
+const emptyProduct = () => ({ id: null, nombre: '', codigo_barras: '', presentacion: '', imagen_url: '', precio_compra: 0, precio_venta: 0, stock_actual: 0, stock_minimo: 5, requiere_receta: false });
+const formProd = ref(emptyProduct());
+const formLote = ref({ numero_lote: '', stock_ingresado: 10, fecha_vencimiento: '' });
 
-const formLote = ref({
-  numero_lote: '',
-  stock_ingresado: 10,
-  fecha_vencimiento: ''
-});
+const initials = (name = '') => name.split(' ').map((word) => word[0]).join('').slice(0, 2).toUpperCase() || 'RX';
+const hideBrokenImage = (productId) => { brokenImageIds.value = new Set([...brokenImageIds.value, productId]); };
 
-const cargarProductos = async () => {
+async function cargarProductos() {
   try {
     const res = await api.get('/productos');
-    productos.value = res.data;
+    productos.value = res.data.data || res.data || [];
   } catch (err) {
     console.error('Error al cargar productos:', err);
   }
-};
+}
 
-const abrirModalProducto = (prod = null) => {
-  if (prod) {
-    formProd.value = { 
-      id: prod.id, 
-      nombre: prod.nombre, 
-      codigo_barras: prod.codigo_barras || '', 
-      presentacion: prod.presentacion || '', 
-      precio_compra: prod.precio_compra || 0,
-      precio_venta: prod.precio_venta || 0,
-      stock_actual: prod.stock_actual || 0,
-      stock_minimo: prod.stock_minimo || 5,
-      requiere_receta: Boolean(prod.requiere_receta) 
-    };
-  } else {
-    formProd.value = { 
-      id: null, 
-      nombre: '', 
-      codigo_barras: '', 
-      presentacion: '', 
-      precio_compra: 0,
-      precio_venta: 0, 
-      stock_actual: 0,
-      stock_minimo: 5,
-      requiere_receta: false 
-    };
-  }
+function abrirModalProducto(prod = null) {
+  formProd.value = prod ? {
+    id: prod.id, nombre: prod.nombre, codigo_barras: prod.codigo_barras || '', presentacion: prod.presentacion || '',
+    imagen_url: prod.imagen_url || '', precio_compra: prod.precio_compra || 0, precio_venta: prod.precio_venta || 0,
+    stock_actual: prod.stock_actual || 0, stock_minimo: prod.stock_minimo || 5, requiere_receta: Boolean(prod.requiere_receta),
+  } : emptyProduct();
   mostrarModalProd.value = true;
-};
+}
 
-const guardarProducto = async () => {
+async function guardarProducto() {
   try {
     const payload = {
-      nombre: formProd.value.nombre,
-      codigo_barras: formProd.value.codigo_barras || null,
-      presentacion: formProd.value.presentacion || null,
-      precio_compra: Number(formProd.value.precio_compra || 0),
-      precio_venta: Number(formProd.value.precio_venta || 0),
-      stock_actual: Number(formProd.value.stock_actual || 0),
-      stock_minimo: Number(formProd.value.stock_minimo || 5),
-      requiere_receta: Boolean(formProd.value.requiere_receta)
+      nombre: formProd.value.nombre, codigo_barras: formProd.value.codigo_barras || null, presentacion: formProd.value.presentacion || null,
+      imagen_url: formProd.value.imagen_url || null, precio_compra: Number(formProd.value.precio_compra || 0),
+      precio_venta: Number(formProd.value.precio_venta || 0), stock_actual: Number(formProd.value.stock_actual || 0),
+      stock_minimo: Number(formProd.value.stock_minimo || 5), requiere_receta: Boolean(formProd.value.requiere_receta),
     };
-
-    if (formProd.value.id) {
-      await api.put(`/productos/${formProd.value.id}`, payload);
-    } else {
-      await api.post('/productos', payload);
-    }
-    
+    if (formProd.value.id) await api.put(`/productos/${formProd.value.id}`, payload);
+    else await api.post('/productos', payload);
     mostrarModalProd.value = false;
-    cargarProductos();
+    await cargarProductos();
   } catch (err) {
-    const errorDetails = err.response?.data?.errors 
-      ? Object.values(err.response.data.errors).flat().join('\n') 
-      : (err.response?.data?.message || 'Error al guardar el producto');
+    const errorDetails = err.response?.data?.errors ? Object.values(err.response.data.errors).flat().join('\n') : (err.response?.data?.message || 'Error al guardar el producto');
     alert(`No se pudo guardar:\n${errorDetails}`);
   }
-};
+}
 
-const abrirModalLote = (prod) => {
+function abrirModalLote(prod) {
   prodSeleccionado.value = prod;
   formLote.value = { numero_lote: '', stock_ingresado: 10, fecha_vencimiento: '' };
   mostrarModalLote.value = true;
-};
+}
 
-const guardarLote = async () => {
+async function guardarLote() {
   try {
-    const payload = {
-      producto_id: prodSeleccionado.value.id,
-      numero_lote: formLote.value.numero_lote,
-      stock: Number(formLote.value.stock_ingresado),
-      cantidad: Number(formLote.value.stock_ingresado),
-      stock_ingresado: Number(formLote.value.stock_ingresado),
-      fecha_vencimiento: formLote.value.fecha_vencimiento
-    };
-
+    const payload = { producto_id: prodSeleccionado.value.id, numero_lote: formLote.value.numero_lote, stock: Number(formLote.value.stock_ingresado), cantidad: Number(formLote.value.stock_ingresado), stock_ingresado: Number(formLote.value.stock_ingresado), fecha_vencimiento: formLote.value.fecha_vencimiento };
     await api.post('/inventario/lote', payload);
     mostrarModalLote.value = false;
-    cargarProductos();
+    await cargarProductos();
   } catch (err) {
-    const errorDetails = err.response?.data?.errors 
-      ? Object.values(err.response.data.errors).flat().join('\n') 
-      : (err.response?.data?.message || 'Error al registrar el lote');
+    const errorDetails = err.response?.data?.errors ? Object.values(err.response.data.errors).flat().join('\n') : (err.response?.data?.message || 'Error al registrar el lote');
     alert(`No se pudo registrar el lote:\n${errorDetails}`);
   }
-};
+}
 
-onMounted(() => {
-  cargarProductos();
-});
+onMounted(cargarProductos);
 </script>
