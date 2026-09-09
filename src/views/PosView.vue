@@ -1,73 +1,17 @@
 <template>
-  <div class="min-h-screen w-full bg-gray-100 font-sans p-2 sm:p-4 flex flex-col justify-between">
+  <div class="space-y-4">
     <!-- Layout Grid Adaptativo -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 w-full flex-1">
       
       <!-- PANEL IZQUIERDO: Buscador, Botones y Catálogo -->
       <div class="lg:col-span-7 flex flex-col gap-3">
         
-        <!-- Header, Perfil & Buscador -->
-        <div class="bg-white p-3 sm:p-4 rounded-xl shadow-sm flex flex-col gap-3 border border-gray-100">
-          
-          <!-- Barra Superior: Info Usuario + Botones Navegación -->
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-gray-100 pb-2">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-semibold text-gray-500">Usuario:</span>
-              <span class="text-xs font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded-md">
-                {{ usuario.name || 'Operador' }} ({{ usuarioRolDisplay }})
-              </span>
+        <!-- Barra de búsqueda -->
+          <div class="app-card p-4 sm:p-5">
+            <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div><p class="text-xs font-semibold uppercase tracking-wider text-cyan-700">Venta activa</p><h2 class="text-lg font-bold text-slate-900">Encuentra productos rápidamente</h2></div>
+              <span class="text-xs font-medium text-slate-500">Operador: {{ usuario.name || 'Operador' }} · {{ usuarioRolDisplay }}</span>
             </div>
-
-            <!-- Botones de Navegación -->
-            <div class="flex flex-wrap gap-1.5 justify-end w-full sm:w-auto">
-              <router-link 
-                to="/ventas" 
-                class="bg-gray-800 hover:bg-gray-900 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1 shadow transition"
-              >
-                📋 Historial
-              </router-link>
-
-              <router-link 
-                to="/inventario" 
-                class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1 shadow transition"
-              >
-                📦 Inventario
-              </router-link>
-
-              <router-link 
-                to="/caja" 
-                class="bg-green-700 hover:bg-green-800 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1 shadow transition"
-              >
-                💵 Caja
-              </router-link>
-
-              <!-- Solo visibles para Admin -->
-              <router-link 
-                v-if="esAdmin"
-                to="/reportes" 
-                class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1 shadow transition"
-              >
-                📊 Reportes
-              </router-link>
-
-              <router-link 
-                v-if="esAdmin"
-                to="/usuarios" 
-                class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1 shadow transition"
-              >
-                👥 Usuarios
-              </router-link>
-
-              <!-- Botón Cerrar Sesión -->
-              <button 
-                @click="cerrarSesion" 
-                class="bg-red-600 hover:bg-red-700 text-white text-xs px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1 shadow transition"
-              >
-                🚪 Salir
-              </button>
-            </div>
-          </div>
-
           <!-- Buscador de Productos -->
           <div class="flex gap-2">
             <input 
