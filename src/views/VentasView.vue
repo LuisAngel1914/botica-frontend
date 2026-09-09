@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-3 sm:p-6 font-sans">
+  <div class="space-y-6">
     <div class="max-w-7xl mx-auto space-y-4 sm:space-y-6">
       
       <!-- Cabecera y Navegación Responsiva -->
