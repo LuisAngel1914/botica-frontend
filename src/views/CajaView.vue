@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6 bg-gray-100 min-h-screen font-sans">
+  <div class="mx-auto max-w-2xl">
     <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-md">
       
       <!-- Encabezado con navegación -->
