@@ -7,6 +7,7 @@
 
     <section v-else-if="status === 'cerrada'" class="app-card overflow-hidden">
       <div class="border-b border-slate-100 bg-amber-50 p-5"><div class="flex gap-3"><CircleAlert class="shrink-0 text-amber-700" :size="22" /><div><h3 class="font-bold text-amber-950">Caja cerrada</h3><p class="mt-1 text-sm text-amber-800">Registra el fondo inicial para iniciar un nuevo turno de ventas.</p></div></div></div>
+      <CashCorrectionDialog @saved="show('Corrección registrada en la bitácora.')" />
       <form class="p-5 sm:p-6" @submit.prevent="openCashRegister"><label class="field-label" for="opening-amount">Monto inicial en caja</label><div class="relative max-w-sm"><span class="absolute left-3 top-2.5 text-sm font-semibold text-slate-400">S/</span><input id="opening-amount" v-model.number="openingAmount" class="field-control pl-9" min="0" step="0.10" type="number" required placeholder="0.00" /></div><button class="btn btn-primary mt-5" :disabled="saving || openingAmount === null || openingAmount < 0"><LoaderCircle v-if="saving" class="animate-spin" :size="18" /><Unlock v-else :size="18" />{{ saving ? 'Abriendo caja…' : 'Abrir caja' }}</button></form>
     </section>
 
@@ -26,6 +27,7 @@ import { defineComponent, h, onMounted, ref } from 'vue';
 import { CircleAlert, CircleCheck, LoaderCircle, Lock, Unlock } from 'lucide-vue-next';
 import api from '../api/axios';
 import InlineNotice from '../components/ui/InlineNotice.vue';
+import CashCorrectionDialog from '../components/cash/CashCorrectionDialog.vue';
 import PageHeader from '../components/ui/PageHeader.vue';
 
 const Metric = defineComponent({ props: { label: String, value: [Number, String], tone: String }, setup(props) { return () => h('div', { class: 'rounded-2xl border border-slate-100 bg-slate-50 p-4' }, [h('p', { class: 'text-xs font-semibold text-slate-500' }, props.label), h('p', { class: ['mt-1 text-xl font-black', props.tone === 'cyan' ? 'text-cyan-700' : props.tone === 'violet' ? 'text-violet-700' : 'text-slate-900'] }, 'S/ ' + money(props.value))]); } });

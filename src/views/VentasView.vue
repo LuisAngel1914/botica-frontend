@@ -1,271 +1,72 @@
 <template>
-  <div class="space-y-6">
-    <div class="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-      
-      <PageHeader eyebrow="Operaciones comerciales" title="Historial de ventas" description="Consulta, filtra y reimprime comprobantes de venta." />
+  <div class="mx-auto max-w-7xl space-y-6">
+    <PageHeader eyebrow="Operaciones comerciales" title="Historial de ventas" description="Consulta, filtra y reimprime comprobantes. Las anulaciones requieren autorización y motivo." />
 
-      <!-- Barra de Búsqueda y Filtros de Fecha -->
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-        <div class="w-full md:flex-1">
-          <input 
-            v-model="busqueda"
-            type="text" 
-            placeholder="Buscar por cliente, DNI/RUC o N° Venta..." 
-            class="w-full p-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg outline-none focus:border-blue-500"
-          />
-        </div>
+    <InlineNotice :notice="notice" @dismiss="notice = null" />
 
-        <div class="flex flex-wrap items-center gap-2 text-xs font-semibold text-gray-600">
-          <div class="flex items-center gap-1.5 flex-1 sm:flex-none">
-            <label>Desde:</label>
-            <input 
-              v-model="fechaInicio" 
-              type="date" 
-              class="w-full sm:w-auto p-2 border border-gray-300 rounded-lg outline-none text-xs"
-            />
-          </div>
-          <div class="flex items-center gap-1.5 flex-1 sm:flex-none">
-            <label>Hasta:</label>
-            <input 
-              v-model="fechaFin" 
-              type="date" 
-              class="w-full sm:w-auto p-2 border border-gray-300 rounded-lg outline-none text-xs"
-            />
-          </div>
-          <button 
-            @click="obtenerVentas" 
-            class="w-full sm:w-auto bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-xs font-bold transition mt-1 sm:mt-0"
-          >
-            Filtrar
-          </button>
-        </div>
-      </div>
-
-      <!-- Tabla de Ventas (Scroll Horizontal en Móviles) -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div v-if="cargando" class="text-center py-12 text-gray-500 text-sm">Cargando historial de ventas...</div>
-
-        <div v-else-if="ventasFiltradas.length > 0" class="overflow-x-auto">
-          <table class="w-full text-left border-collapse min-w-[650px]">
-            <thead>
-              <tr class="bg-gray-50 text-gray-600 text-xs uppercase border-b border-gray-200">
-                <th class="p-3.5">ID / Fecha</th>
-                <th class="p-3.5">Cliente</th>
-                <th class="p-3.5">Método Pago</th>
-                <th class="p-3.5 text-right">Total</th>
-                <th class="p-3.5 text-center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 text-xs sm:text-sm">
-              <tr v-for="venta in ventasFiltradas" :key="venta.id" class="hover:bg-gray-50/80 transition">
-                <td class="p-3.5 whitespace-nowrap">
-                  <span class="font-bold text-gray-800">#{{ venta.id }}</span>
-                  <span class="block text-xs text-gray-500">{{ formatearFecha(venta.created_at) }}</span>
-                </td>
-                <td class="p-3.5">
-                  <p class="font-semibold text-gray-700">
-                    {{ venta.cliente?.nombre_razon_social || venta.cliente?.nombre || venta.cliente_datos?.nombre_razon_social || 'Cliente Eventual' }}
-                  </p>
-                  <span v-if="obtenerDocCliente(venta)" class="text-xs text-gray-400 font-mono">
-                    {{ obtenerDocCliente(venta) }}
-                  </span>
-                </td>
-                <td class="p-3.5 whitespace-nowrap">
-                  <span :class="badgeMetodoPago(venta.metodo_pago)" class="text-xs font-bold px-2.5 py-1 rounded-md inline-block">
-                    {{ venta.metodo_pago }}
-                  </span>
-                </td>
-                <td class="p-3.5 text-right font-black text-blue-600 text-sm sm:text-base whitespace-nowrap">
-                  S/ {{ Number(venta.total || calcularTotalLocal(venta)).toFixed(2) }}
-                </td>
-                <td class="p-3.5 text-center whitespace-nowrap">
-                  <div class="flex items-center justify-center gap-1.5">
-                    <button 
-                      @click="verDetalle(venta)" 
-                      class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs px-2.5 py-1.5 rounded-lg font-bold transition"
-                    >
-                      👁️ Ver Detalle
-                    </button>
-                    <button 
-                      @click="reimprimirTicket(venta.id)" 
-                      class="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs px-2.5 py-1.5 rounded-lg font-bold transition"
-                    >
-                      🖨️ Ticket
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div v-else class="text-center py-12 text-gray-400 text-sm">
-          No se encontraron ventas registradas en el periodo seleccionado.
-        </div>
-      </div>
+    <div class="app-card flex flex-col gap-3 p-4 lg:flex-row lg:items-end">
+      <label class="flex-1"><span class="field-label">Buscar</span><input v-model="search" class="field-control" placeholder="Cliente, documento o número de venta" /></label>
+      <label><span class="field-label">Desde</span><input v-model="from" class="field-control" type="date" /></label>
+      <label><span class="field-label">Hasta</span><input v-model="to" class="field-control" type="date" /></label>
+      <button class="btn btn-secondary" :disabled="loading" @click="loadSales">Aplicar filtros</button>
     </div>
 
-    <!-- MODAL DETALLE DE VENTA RESPONSIVO -->
-    <div v-if="modalDetalle" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
-        <div class="bg-gray-800 text-white p-4 flex justify-between items-center">
-          <h3 class="font-bold text-sm sm:text-base">Detalle de Venta #{{ ventaSeleccionada?.id }}</h3>
-          <button @click="modalDetalle = false" class="text-gray-400 hover:text-white font-bold text-lg">✕</button>
-        </div>
-
-        <div class="p-4 sm:p-5 space-y-4 max-h-[75vh] overflow-y-auto">
-          <!-- Info Comprobante -->
-          <div class="grid grid-cols-2 gap-3 bg-gray-50 p-3 rounded-xl text-xs">
-            <div>
-              <p class="text-gray-500">Fecha y Hora:</p>
-              <p class="font-bold text-gray-800">{{ formatearFecha(ventaSeleccionada?.created_at) }}</p>
-            </div>
-            <div>
-              <p class="text-gray-500">Método de Pago:</p>
-              <p class="font-bold text-gray-800">{{ ventaSeleccionada?.metodo_pago }}</p>
-            </div>
-            <div class="col-span-2 border-t border-gray-200 pt-2">
-              <p class="text-gray-500">Cliente:</p>
-              <p class="font-bold text-gray-800">
-                {{ ventaSeleccionada?.cliente?.nombre_razon_social || ventaSeleccionada?.cliente?.nombre || ventaSeleccionada?.cliente_datos?.nombre_razon_social || 'Cliente Eventual' }}
-              </p>
-            </div>
-          </div>
-
-          <!-- Items Vendidos -->
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs border-collapse min-w-[300px]">
-              <thead>
-                <tr class="border-b border-gray-200 text-gray-500 uppercase">
-                  <th class="py-2">Producto</th>
-                  <th class="py-2 text-center">Cant.</th>
-                  <th class="py-2 text-right">P. Unit</th>
-                  <th class="py-2 text-right">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr v-for="item in ventaSeleccionada?.detalles" :key="item.id">
-                  <td class="py-2.5">
-                    <p class="font-semibold text-gray-800">{{ item.producto?.nombre || item.nombre }}</p>
-                    <span v-if="item.cmp_medico" class="text-[10px] text-red-600 block font-bold">
-                      💊 Médico: {{ item.nombre_medico || 'N/A' }} | CMP: {{ item.cmp_medico }}
-                    </span>
-                  </td>
-                  <td class="py-2.5 text-center font-bold">{{ item.cantidad }}</td>
-                  <td class="py-2.5 text-right whitespace-nowrap">S/ {{ Number(item.precio_unitario || item.precio).toFixed(2) }}</td>
-                  <td class="py-2.5 text-right font-bold text-gray-800 whitespace-nowrap">
-                    S/ {{ (Number(item.cantidad) * Number(item.precio_unitario || item.precio)).toFixed(2) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Total Modal -->
-          <div class="flex justify-between items-center bg-blue-50 p-3 rounded-xl border border-blue-100">
-            <span class="font-bold text-gray-700 text-xs sm:text-sm">Monto Total:</span>
-            <span class="text-lg sm:text-xl font-black text-blue-600">
-              S/ {{ Number(ventaSeleccionada?.total || calcularTotalLocal(ventaSeleccionada)).toFixed(2) }}
-            </span>
-          </div>
-        </div>
-
-        <div class="bg-gray-50 p-3 text-right border-t border-gray-100">
-          <button 
-            @click="modalDetalle = false" 
-            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs rounded-xl font-bold transition"
-          >
-            Cerrar
-          </button>
-        </div>
+    <section class="app-card overflow-hidden">
+      <div v-if="loading" class="grid min-h-64 place-items-center text-sm text-slate-500">Cargando ventas…</div>
+      <div v-else-if="filteredSales.length" class="overflow-x-auto">
+        <table class="w-full min-w-[760px] text-left text-sm">
+          <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th class="p-4">Venta</th><th class="p-4">Cliente</th><th class="p-4">Pago</th><th class="p-4">Estado</th><th class="p-4 text-right">Total</th><th class="p-4 text-right">Acciones</th></tr></thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr v-for="sale in filteredSales" :key="sale.id" class="hover:bg-slate-50/70">
+              <td class="p-4"><p class="font-bold text-slate-800">#{{ sale.id }}</p><p class="mt-0.5 text-xs text-slate-500">{{ formatDate(sale.created_at) }}</p></td>
+              <td class="p-4"><p class="font-semibold text-slate-700">{{ clientName(sale) }}</p><p v-if="clientDocument(sale)" class="mt-0.5 text-xs text-slate-400">{{ clientDocument(sale) }}</p></td>
+              <td class="p-4"><span class="rounded-lg px-2.5 py-1 text-xs font-bold" :class="paymentClass(sale.metodo_pago)">{{ sale.metodo_pago }}</span></td>
+              <td class="p-4"><span class="rounded-full px-2.5 py-1 text-xs font-bold" :class="sale.estado === 'anulada' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'">{{ sale.estado === 'anulada' ? 'Anulada' : 'Completada' }}</span></td>
+              <td class="p-4 text-right font-black text-slate-900">S/ {{ money(sale.total || localTotal(sale)) }}</td>
+              <td class="p-4"><div class="flex justify-end gap-2"><button class="btn btn-secondary !px-3 !py-2 text-xs" @click="openDetail(sale)">Detalle</button><button class="btn btn-secondary !px-3 !py-2 text-xs" @click="downloadTicket(sale.id)">Ticket</button><button v-if="isAdmin && sale.estado !== 'anulada'" class="btn !bg-red-600 !px-3 !py-2 text-xs !text-white hover:!bg-red-700" @click="openCancel(sale)">Anular</button></div></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+      <div v-else class="grid min-h-64 place-items-center p-6 text-center text-sm text-slate-500">No se encontraron ventas en el período indicado.</div>
+    </section>
+
+    <div v-if="selectedSale" class="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+      <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"><header class="flex items-center justify-between bg-slate-950 p-5 text-white"><div><p class="text-xs font-semibold uppercase tracking-wider text-cyan-300">Comprobante</p><h2 class="font-bold">Venta #{{ selectedSale.id }}</h2></div><button class="text-slate-300 hover:text-white" @click="selectedSale = null">✕</button></header>
+      <div class="max-h-[70vh] space-y-4 overflow-y-auto p-5"><div class="grid gap-3 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-2"><p><span class="text-slate-500">Cliente</span><br><strong>{{ clientName(selectedSale) }}</strong></p><p><span class="text-slate-500">Pago</span><br><strong>{{ selectedSale.metodo_pago }}</strong></p><p><span class="text-slate-500">Fecha</span><br><strong>{{ formatDate(selectedSale.created_at) }}</strong></p><p><span class="text-slate-500">Estado</span><br><strong>{{ selectedSale.estado === 'anulada' ? 'Anulada' : 'Completada' }}</strong></p></div>
+      <div class="overflow-x-auto"><table class="w-full min-w-[460px] text-sm"><thead class="border-b text-xs uppercase text-slate-500"><tr><th class="py-2 text-left">Producto</th><th class="py-2 text-center">Cantidad</th><th class="py-2 text-right">Unitario</th><th class="py-2 text-right">Subtotal</th></tr></thead><tbody class="divide-y divide-slate-100"><tr v-for="item in selectedSale.detalles || []" :key="item.id"><td class="py-3 font-semibold text-slate-800">{{ item.producto?.nombre || item.nombre }}</td><td class="py-3 text-center">{{ item.cantidad }}</td><td class="py-3 text-right">S/ {{ money(item.precio_unitario || item.precio) }}</td><td class="py-3 text-right font-bold">S/ {{ money(Number(item.cantidad) * Number(item.precio_unitario || item.precio)) }}</td></tr></tbody></table></div>
+      <div class="flex justify-between rounded-xl bg-cyan-50 p-4"><span class="font-semibold text-slate-700">Total</span><strong class="text-xl text-cyan-800">S/ {{ money(selectedSale.total || localTotal(selectedSale)) }}</strong></div></div>
+      <footer class="flex justify-end border-t border-slate-100 p-4"><button class="btn btn-secondary" @click="selectedSale = null">Cerrar</button></footer></div>
+    </div>
+
+    <div v-if="saleToCancel" class="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+      <form class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @submit.prevent="cancelSale"><p class="text-xs font-semibold uppercase tracking-wider text-red-700">Operación administrativa</p><h2 class="mt-1 text-lg font-bold text-slate-900">Anular venta #{{ saleToCancel.id }}</h2><p class="mt-2 text-sm text-slate-600">Se repondrá el stock y la venta quedará marcada como anulada. No se eliminará ningún registro.</p><label class="field-label mt-5">Motivo de anulación</label><textarea v-model.trim="cancellationReason" class="field-control min-h-28" minlength="10" maxlength="1000" required placeholder="Describe el motivo (mínimo 10 caracteres)." /><p v-if="cancelError" class="mt-2 text-sm text-red-700">{{ cancelError }}</p><div class="mt-6 flex justify-end gap-3"><button class="btn btn-secondary" type="button" @click="saleToCancel = null">Volver</button><button class="btn !bg-red-600 !text-white hover:!bg-red-700" :disabled="cancelling"> {{ cancelling ? 'Anulando…' : 'Confirmar anulación' }}</button></div></form>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import api from '../api/axios';
+import { useAuth } from '../composables/useAuth';
+import InlineNotice from '../components/ui/InlineNotice.vue';
 import PageHeader from '../components/ui/PageHeader.vue';
 
-const ventas = ref([]);
-const cargando = ref(false);
-const busqueda = ref('');
-const fechaInicio = ref('');
-const fechaFin = ref('');
-
-const modalDetalle = ref(false);
-const ventaSeleccionada = ref(null);
-
-const obtenerVentas = async () => {
-  cargando.value = true;
-  try {
-    const params = {};
-    if (fechaInicio.value) params.fecha_inicio = fechaInicio.value;
-    if (fechaFin.value) params.fecha_fin = fechaFin.value;
-
-    const res = await api.get('/ventas', { params });
-    ventas.value = res.data.data || res.data;
-  } catch (err) {
-    console.error('Error al cargar ventas:', err);
-  } finally {
-    cargando.value = false;
-  }
-};
-
-const ventasFiltradas = computed(() => {
-  if (!busqueda.value.trim()) return ventas.value;
-  const q = busqueda.value.toLowerCase();
-  
-  return ventas.value.filter(v => {
-    const id = v.id.toString();
-    const cliente = (v.cliente?.nombre_razon_social || v.cliente?.nombre || v.cliente_datos?.nombre_razon_social || '').toLowerCase();
-    const doc = (v.cliente?.numero_documento || v.cliente_datos?.numero_documento || '').toLowerCase();
-    return id.includes(q) || cliente.includes(q) || doc.includes(q);
-  });
-});
-
-const obtenerDocCliente = (venta) => {
-  return venta.cliente?.numero_documento || venta.cliente_datos?.numero_documento || null;
-};
-
-const formatearFecha = (fechaStr) => {
-  if (!fechaStr) return '-';
-  const fecha = new Date(fechaStr);
-  return fecha.toLocaleString('es-PE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
-  });
-};
-
-const badgeMetodoPago = (metodo) => {
-  switch (metodo) {
-    case 'Efectivo': return 'bg-green-100 text-green-800';
-    case 'Yape': return 'bg-purple-100 text-purple-800';
-    case 'Plin': return 'bg-cyan-100 text-cyan-800';
-    default: return 'bg-blue-100 text-blue-800';
-  }
-};
-
-const calcularTotalLocal = (venta) => {
-  if (!venta || !venta.detalles) return 0;
-  return venta.detalles.reduce((acc, d) => acc + (Number(d.cantidad) * Number(d.precio_unitario || d.precio)), 0);
-};
-
-const verDetalle = (venta) => {
-  ventaSeleccionada.value = venta;
-  modalDetalle.value = true;
-};
-
-const reimprimirTicket = (ventaId) => {
-  window.open(`${api.defaults.baseURL}/ventas/${ventaId}/ticket`, '_blank');
-};
-
-onMounted(() => {
-  obtenerVentas();
-});
+const { isAdmin } = useAuth();
+const sales = ref([]), loading = ref(false), search = ref(''), from = ref(''), to = ref('');
+const selectedSale = ref(null), saleToCancel = ref(null), cancellationReason = ref(''), cancelling = ref(false), cancelError = ref(''), notice = ref(null);
+const money = (value) => Number(value || 0).toFixed(2);
+const formatDate = (value) => value ? new Date(value).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+const clientName = (sale) => sale.cliente?.nombre_razon_social || sale.cliente?.nombre || sale.cliente_datos?.nombre_razon_social || 'Cliente eventual';
+const clientDocument = (sale) => sale.cliente?.numero_documento || sale.cliente_datos?.numero_documento || '';
+const localTotal = (sale) => (sale.detalles || []).reduce((sum, item) => sum + Number(item.cantidad) * Number(item.precio_unitario || item.precio), 0);
+const paymentClass = (method) => method === 'Efectivo' ? 'bg-emerald-50 text-emerald-700' : method === 'Yape' ? 'bg-violet-50 text-violet-700' : 'bg-cyan-50 text-cyan-700';
+const filteredSales = computed(() => { const query = search.value.trim().toLowerCase(); if (!query) return sales.value; return sales.value.filter((sale) => [String(sale.id), clientName(sale), clientDocument(sale)].some((value) => value.toLowerCase().includes(query))); });
+function show(message, type = 'success') { notice.value = { message, type }; }
+async function loadSales() { loading.value = true; try { const params = {}; if (from.value) params.fecha_inicio = from.value; if (to.value) params.fecha_fin = to.value; const { data } = await api.get('/ventas', { params }); sales.value = data.data || data; } catch { show('No se pudo cargar el historial de ventas.', 'error'); } finally { loading.value = false; } }
+function openDetail(sale) { selectedSale.value = sale; }
+function openCancel(sale) { saleToCancel.value = sale; cancellationReason.value = ''; cancelError.value = ''; }
+async function cancelSale() { cancelling.value = true; cancelError.value = ''; try { await api.post('/ventas/' + saleToCancel.value.id + '/anular', { motivo: cancellationReason.value }); const id = saleToCancel.value.id; saleToCancel.value = null; if (selectedSale.value?.id === id) selectedSale.value = null; show('Venta anulada y stock repuesto. El motivo quedó registrado en la bitácora.'); await loadSales(); } catch (error) { cancelError.value = error.response?.data?.message || 'No se pudo anular la venta.'; } finally { cancelling.value = false; } }
+async function downloadTicket(id) { try { const response = await api.get('/ventas/' + id + '/ticket', { responseType: 'blob' }); const url = URL.createObjectURL(new Blob([response.data], { type: 'text/html' })); const link = document.createElement('a'); link.href = url; link.download = 'ticket-venta-' + id + '.html'; link.click(); URL.revokeObjectURL(url); } catch { show('No se pudo descargar el ticket.', 'error'); } }
+onMounted(loadSales);
 </script>
