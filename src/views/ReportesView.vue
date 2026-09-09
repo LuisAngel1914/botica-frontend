@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-100 font-sans p-4 sm:p-6 print:bg-white print:p-0">
+  <div class="space-y-6 print:bg-white print:p-0">
     <div class="max-w-7xl mx-auto space-y-6 print:max-w-full">
       
       <!-- HEADER INTERFAZ WEB (Oculto al imprimir o guardar en PDF) -->
