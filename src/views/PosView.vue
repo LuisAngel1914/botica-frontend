@@ -2,9 +2,10 @@
   <div class="space-y-4">
     <div v-if="notice" class="flex items-start justify-between gap-3 rounded-2xl border p-4 text-sm" :class="notice.type === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800'" role="status"><span>{{ notice.message }}</span><button class="rounded-lg px-2 py-1 font-bold hover:bg-black/5" aria-label="Cerrar aviso" @click="notice = null">×</button></div>
     <div class="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(22rem,0.8fr)]">
-      <ProductCatalog v-model:query="query" :products="filteredProducts" :loading="loadingProducts" @search="searchProduct" @select="addProduct" />
+      <ProductCatalog v-model:query="query" :products="filteredProducts" :loading="loadingProducts" @search="searchProduct" @select="addProduct" @details="openProductDetails" />
       <SaleCart v-model:document-number="documentNumber" v-model:payment-method="paymentMethod" :cart="cart" :customer="customer" :processing="processing" :total="saleTotal" @find-customer="findCustomer" @remove="removeFromCart" @quantity="updateQuantity" @checkout="checkCashRegisterAndSell" />
     </div>
+    <ProductDetailsDialog :open="showProductDetails" :product="selectedProductDetails" @close="closeProductDetails" @select="addProductFromDetails" />
     <PrescriptionDialog v-model:data="prescription" :open="showPrescription" :product="selectedPrescriptionProduct" @close="closePrescription" @confirm="confirmPrescription" />
     <ChatIaModal />
   </div>
@@ -17,6 +18,7 @@ import api from '../api/axios';
 import ChatIaModal from '../components/ChatIaModal.vue';
 import PrescriptionDialog from '../components/pos/PrescriptionDialog.vue';
 import ProductCatalog from '../components/pos/ProductCatalog.vue';
+import ProductDetailsDialog from '../components/pos/ProductDetailsDialog.vue';
 import SaleCart from '../components/pos/SaleCart.vue';
 
 const router = useRouter();
@@ -32,6 +34,8 @@ const notice = ref(null);
 const showPrescription = ref(false);
 const selectedPrescriptionProduct = ref(null);
 const prescription = ref({ nombre_medico: '', cmp_medico: '' });
+const showProductDetails = ref(false);
+const selectedProductDetails = ref(null);
 
 const filteredProducts = computed(() => {
   const term = query.value.trim().toLowerCase();
@@ -63,6 +67,9 @@ function searchProduct() {
     query.value = '';
   }
 }
+function openProductDetails(product) { selectedProductDetails.value = product; showProductDetails.value = true; }
+function closeProductDetails() { showProductDetails.value = false; selectedProductDetails.value = null; }
+function addProductFromDetails(product) { closeProductDetails(); addProduct(product); }
 function addProduct(product) {
   if (Number(product.stock_actual) <= 0) return notify('Este producto no tiene stock disponible.', 'error');
   if (product.requiere_receta) {
