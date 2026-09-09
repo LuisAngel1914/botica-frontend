@@ -6,11 +6,11 @@
         <span><strong class="block text-sm text-white">Botica</strong><small class="text-slate-400">Operations</small></span>
       </RouterLink>
       <nav class="space-y-1">
-        <RouterLink v-for="item in navigation" :key="item.to" :to="item.to" class="nav-link" active-class="nav-link-active">
+        <RouterLink v-for="item in navigation" :key="item.to" :to="item.to" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white" active-class="bg-cyan-400 text-slate-950 hover:bg-cyan-300 hover:text-slate-950">
           <component :is="item.icon" :size="18" /><span>{{ item.label }}</span>
         </RouterLink>
       </nav>
-      <button class="nav-link mt-auto" @click="logout"><LogOut :size="18" /><span>Cerrar sesión</span></button>
+      <button class="mt-auto flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white" @click="logout"><LogOut :size="18" /><span>Cerrar sesión</span></button>
     </aside>
 
     <main class="min-h-screen lg:pl-64">
@@ -50,8 +50,3 @@ const title = computed(() => route.meta.title || 'Panel de operaciones');
 const initials = computed(() => (currentUser.value.name || 'OP').split(' ').map(word => word[0]).slice(0, 2).join('').toUpperCase());
 async function logout() { clearSession(); await router.replace({ name: 'login' }); }
 </script>
-
-<style scoped>
-.nav-link { @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white; }
-.nav-link-active { @apply bg-cyan-400 text-slate-950 hover:bg-cyan-300 hover:text-slate-950; }
-</style>
