@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <div v-if="notice" class="flex items-start justify-between gap-3 rounded-2xl border p-4 text-sm" :class="notice.type === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800'" role="status"><span>{{ notice.message }}</span><button class="rounded-lg px-2 py-1 font-bold hover:bg-black/5" aria-label="Cerrar aviso" @click="notice = null">×</button></div>
     <div class="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(22rem,0.8fr)]">
-      <ProductCatalog v-model:query="query" :products="filteredProducts" :loading="loadingProducts" @search="searchProduct" @select="addProduct" @details="openProductDetails" />
+      <ProductCatalog v-model:query="query" :products="filteredProducts" :favorite-ids="favoriteIds" :recent-products="recentProducts" :loading="loadingProducts" @search="searchProduct" @select="addProduct" @details="openProductDetails" @toggle-favorite="toggleFavorite" />
       <SaleCart v-model:document-number="documentNumber" v-model:payment-method="paymentMethod" :cart="cart" :customer="customer" :processing="processing" :total="saleTotal" @find-customer="findCustomer" @remove="removeFromCart" @quantity="updateQuantity" @checkout="checkCashRegisterAndSell" />
     </div>
     <ProductDetailsDialog :open="showProductDetails" :product="selectedProductDetails" @close="closeProductDetails" @select="addProductFromDetails" />
@@ -36,16 +36,23 @@ const selectedPrescriptionProduct = ref(null);
 const prescription = ref({ nombre_medico: '', cmp_medico: '' });
 const showProductDetails = ref(false);
 const selectedProductDetails = ref(null);
+const favoriteIds = ref(readStoredIds('botica-pos-favorite-product-ids'));
+const recentIds = ref(readStoredIds('botica-pos-recent-product-ids'));
 
 const filteredProducts = computed(() => {
   const term = query.value.trim().toLowerCase();
   if (!term) return products.value;
   return products.value.filter((product) => product.nombre?.toLowerCase().includes(term) || product.codigo_barras?.toLowerCase().includes(term));
 });
+const recentProducts = computed(() => recentIds.value.map((id) => products.value.find((product) => product.id === id)).filter(Boolean));
 const saleTotal = computed(() => cart.value.reduce((total, item) => total + item.cantidad * item.precio_unitario, 0));
 
 watch(documentNumber, (value) => { if (!value?.trim()) customer.value = null; });
 
+function readStoredIds(key) { try { const value = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } }
+function storeIds(key, ids) { localStorage.setItem(key, JSON.stringify(ids)); }
+function toggleFavorite(product) { const exists = favoriteIds.value.includes(product.id); favoriteIds.value = exists ? favoriteIds.value.filter((id) => id !== product.id) : [product.id, ...favoriteIds.value].slice(0, 12); storeIds('botica-pos-favorite-product-ids', favoriteIds.value); }
+function rememberProduct(product) { recentIds.value = [product.id, ...recentIds.value.filter((id) => id !== product.id)].slice(0, 8); storeIds('botica-pos-recent-product-ids', recentIds.value); }
 function notify(message, type = 'success') {
   notice.value = { message, type };
   window.setTimeout(() => { if (notice.value?.message === message) notice.value = null; }, 5000);
@@ -92,6 +99,7 @@ function closePrescription() {
   selectedPrescriptionProduct.value = null;
 }
 function insertIntoCart(product, recipe = null) {
+  rememberProduct(product);
   const existing = cart.value.find((item) => item.producto_id === product.id);
   if (existing) {
     if (existing.cantidad >= existing.stock_max) return notify('Alcanzaste el stock disponible para este producto.', 'error');
