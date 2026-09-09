@@ -284,7 +284,7 @@ const verDetalle = (venta) => {
 };
 
 const reimprimirTicket = (ventaId) => {
-  window.open(`http://localhost:8000/api/ventas/${ventaId}/ticket`, '_blank');
+  window.open(`${api.defaults.baseURL}/ventas/${ventaId}/ticket`, '_blank');
 };
 
 onMounted(() => {
