@@ -8,6 +8,7 @@ const routes = [
   { path: '/caja', name: 'caja', component: () => import('../views/CajaView.vue'), meta: { requiresAuth: true, title: 'Control de caja' } },
   { path: '/inventario', name: 'inventario', component: () => import('../views/InventarioView.vue'), meta: { requiresAuth: true, requiresAdmin: true, title: 'Inventario' } },
   { path: '/reportes', name: 'reportes', component: () => import('../views/ReportesView.vue'), meta: { requiresAuth: true, requiresAdmin: true, title: 'Reportes' } },
+  { path: '/actividad', name: 'actividad', component: () => import('../views/ActividadView.vue'), meta: { requiresAuth: true, requiresAdmin: true, title: 'Historial de actividad' } },
   { path: '/usuarios', name: 'usuarios', component: () => import('../views/UsuariosView.vue'), meta: { requiresAuth: true, requiresAdmin: true, title: 'Usuarios' } },
   { path: '/:pathMatch(.*)*', redirect: '/pos' },
 ];
