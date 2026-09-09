@@ -1,159 +1,40 @@
 <template>
-  <div class="p-6 bg-gray-100 min-h-screen font-sans">
-    <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-md">
-      
-      <!-- Encabezado con navegación -->
-      <div class="flex justify-between items-center mb-6 border-b pb-4">
-        <router-link to="/pos" class="bg-gray-800 hover:bg-gray-900 text-white text-xs px-3 py-2 rounded-lg font-semibold">
-          ⬅️ Ir al POS
-        </router-link>
-        <h1 class="text-xl font-bold text-gray-800">Control de Caja</h1>
-      </div>
+  <div class="mx-auto max-w-3xl">
+    <PageHeader eyebrow="Operaciones diarias" title="Control de caja" description="Abre turnos, controla ingresos y realiza el arqueo con trazabilidad." />
+    <InlineNotice :notice="notice" @dismiss="notice = null" />
 
-      <div v-if="cargando" class="text-center py-8 text-gray-500">Cargando estado de caja...</div>
+    <div v-if="loading" class="app-card grid min-h-72 place-items-center text-sm text-slate-500"><LoaderCircle class="mb-2 animate-spin text-cyan-700" :size="24" />Consultando el estado de caja…</div>
 
-      <!-- VISTA: APERTURA DE CAJA -->
-      <div v-else-if="estado === 'cerrada'" class="space-y-4">
-        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded text-yellow-800 text-sm">
-          ⚠️ <strong>Caja Cerrada:</strong> Debes ingresar el monto base para aperturar el turno antes de realizar ventas.
-        </div>
+    <section v-else-if="status === 'cerrada'" class="app-card overflow-hidden">
+      <div class="border-b border-slate-100 bg-amber-50 p-5"><div class="flex gap-3"><CircleAlert class="shrink-0 text-amber-700" :size="22" /><div><h3 class="font-bold text-amber-950">Caja cerrada</h3><p class="mt-1 text-sm text-amber-800">Registra el fondo inicial para iniciar un nuevo turno de ventas.</p></div></div></div>
+      <form class="p-5 sm:p-6" @submit.prevent="openCashRegister"><label class="field-label" for="opening-amount">Monto inicial en caja</label><div class="relative max-w-sm"><span class="absolute left-3 top-2.5 text-sm font-semibold text-slate-400">S/</span><input id="opening-amount" v-model.number="openingAmount" class="field-control pl-9" min="0" step="0.10" type="number" required placeholder="0.00" /></div><button class="btn btn-primary mt-5" :disabled="saving || openingAmount === null || openingAmount < 0"><LoaderCircle v-if="saving" class="animate-spin" :size="18" /><Unlock v-else :size="18" />{{ saving ? 'Abriendo caja…' : 'Abrir caja' }}</button></form>
+    </section>
 
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1">Monto Inicial en Caja (S/):</label>
-          <input 
-            v-model.number="montoInicial" 
-            type="number" 
-            step="0.10" 
-            placeholder="0.00" 
-            class="w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-blue-500"
-          />
-        </div>
+    <template v-else>
+      <section class="app-card overflow-hidden"><div class="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between"><div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-xl bg-emerald-50 text-emerald-700"><CircleCheck :size="21" /></span><div><h3 class="font-bold text-slate-900">Caja abierta</h3><p class="text-sm text-slate-500">Desde {{ formatDate(cashData.caja?.fecha_apertura) }}</p></div></div><span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">Turno activo</span></div>
+        <div class="grid gap-3 p-5 sm:grid-cols-3"><Metric label="Fondo inicial" :value="cashData.monto_inicial" /><Metric label="Ventas en efectivo" :value="cashData.ventas_efectivo" tone="cyan" /><Metric label="Pagos digitales" :value="cashData.ventas_digitales" tone="violet" /></div>
+        <div class="mx-5 mb-5 rounded-2xl bg-slate-950 p-5 text-white"><p class="text-sm text-slate-300">Efectivo esperado en cajón</p><div class="mt-1 flex items-end justify-between gap-3"><span class="text-xs text-slate-400">Fondo inicial + ventas en efectivo</span><strong class="text-3xl font-black">S/ {{ money(cashData.monto_esperado) }}</strong></div></div>
+      </section>
+      <section class="app-card mt-5 p-5 sm:p-6"><div class="mb-5"><p class="text-xs font-semibold uppercase tracking-wider text-cyan-700">Cierre de turno</p><h3 class="mt-1 text-lg font-bold text-slate-900">Realizar arqueo</h3><p class="mt-1 text-sm text-slate-500">Cuenta el efectivo físico antes de confirmar el cierre.</p></div><form @submit.prevent="confirmClose = true"><label class="field-label" for="closing-amount">Efectivo contado</label><div class="relative max-w-sm"><span class="absolute left-3 top-2.5 text-sm font-semibold text-slate-400">S/</span><input id="closing-amount" v-model.number="closingAmount" class="field-control pl-9" min="0" step="0.10" type="number" required placeholder="0.00" /></div><button class="btn mt-5 bg-red-600 text-white hover:bg-red-700" :disabled="closingAmount === null || closingAmount < 0"><Lock :size="18" />Cerrar caja</button></form></section>
+    </template>
 
-        <button 
-          @click="abrirCaja" 
-          :disabled="montoInicial === null || montoInicial < 0"
-          class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 rounded-lg shadow transition disabled:opacity-50"
-        >
-          🔓 Abrir Caja
-        </button>
-      </div>
-
-      <!-- VISTA: CIERRE / ESTADO DE CAJA -->
-      <div v-else class="space-y-5">
-        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded text-green-800 text-sm flex justify-between items-center">
-          <span>🟢 <strong>Caja Abierta</strong></span>
-          <span class="text-xs text-gray-500">Desde: {{ formatearFecha(datosCaja.caja?.fecha_apertura) }}</span>
-        </div>
-
-        <!-- Desglose de ingresos por método de pago -->
-        <div class="grid grid-cols-3 gap-3">
-          <div class="bg-gray-50 p-3 rounded-lg border">
-            <p class="text-xs text-gray-500 font-semibold">Monto Inicial</p>
-            <p class="text-lg font-bold text-gray-800">S/ {{ datosCaja.monto_inicial?.toFixed(2) }}</p>
-          </div>
-          <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
-            <p class="text-xs text-blue-600 font-semibold">Ventas Efectivo</p>
-            <p class="text-lg font-bold text-blue-700">S/ {{ datosCaja.ventas_efectivo?.toFixed(2) }}</p>
-          </div>
-          <div class="bg-purple-50 p-3 rounded-lg border border-purple-100">
-            <p class="text-xs text-purple-600 font-semibold">Digital (Yape/Tarj.)</p>
-            <p class="text-lg font-bold text-purple-700">S/ {{ datosCaja.ventas_digitales?.toFixed(2) }}</p>
-          </div>
-        </div>
-
-        <div class="bg-gray-800 text-white p-4 rounded-lg flex justify-between items-center">
-          <div>
-            <span class="text-sm font-medium block">Efectivo Total Esperado en Cajón:</span>
-            <span class="text-xs text-gray-400">(Monto Inicial + Ventas en Efectivo)</span>
-          </div>
-          <span class="text-2xl font-black text-green-400">S/ {{ datosCaja.monto_esperado?.toFixed(2) }}</span>
-        </div>
-
-        <hr class="my-4"/>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1">Monto Real Recontado en Arqueo (S/):</label>
-          <input 
-            v-model.number="montoFinal" 
-            type="number" 
-            step="0.10" 
-            placeholder="Ingresa el efectivo contado..." 
-            class="w-full p-2 border border-gray-300 rounded-lg outline-none focus:border-blue-500"
-          />
-        </div>
-
-        <button 
-          @click="cerrarCaja" 
-          :disabled="montoFinal === null || montoFinal < 0"
-          class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg shadow transition disabled:opacity-50"
-        >
-          🔒 Realizar Cierre de Caja
-        </button>
-      </div>
-
-    </div>
+    <div v-if="confirmClose" class="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm" role="dialog" aria-modal="true"><div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"><div class="flex gap-3"><CircleAlert class="text-amber-600" :size="22" /><div><h2 class="font-bold text-slate-900">¿Confirmar cierre de caja?</h2><p class="mt-1 text-sm text-slate-500">Esta acción cerrará el turno actual con el monto contado de S/ {{ money(closingAmount) }}.</p></div></div><div class="mt-6 flex justify-end gap-3"><button class="btn btn-secondary" @click="confirmClose = false">Cancelar</button><button class="btn bg-red-600 text-white hover:bg-red-700" :disabled="saving" @click="closeCashRegister">{{ saving ? 'Cerrando…' : 'Confirmar cierre' }}</button></div></div></div>
   </div>
 </template>
-
 <script setup>
-import { ref, onMounted } from 'vue';
+import { defineComponent, h, onMounted, ref } from 'vue';
+import { CircleAlert, CircleCheck, LoaderCircle, Lock, Unlock } from 'lucide-vue-next';
 import api from '../api/axios';
+import InlineNotice from '../components/ui/InlineNotice.vue';
+import PageHeader from '../components/ui/PageHeader.vue';
 
-const estado = ref('cerrada');
-const cargando = ref(true);
-const datosCaja = ref({});
-const montoInicial = ref(0);
-const montoFinal = ref(null);
-
-const obtenerEstadoCaja = async () => {
-  cargando.value = true;
-  try {
-    const res = await api.get('/caja/estado');
-    estado.value = res.data.estado;
-    datosCaja.value = res.data;
-  } catch (err) {
-    alert('Error al consultar el estado de la caja.');
-  } finally {
-    cargando.value = false;
-  }
-};
-
-const abrirCaja = async () => {
-  try {
-    await api.post('/caja/abrir', { monto_inicial: montoInicial.value });
-    alert('Caja abierta correctamente.');
-    await obtenerEstadoCaja();
-  } catch (err) {
-    alert(err.response?.data?.message || 'Error al abrir caja');
-  }
-};
-
-const cerrarCaja = async () => {
-  if (!confirm('¿Estás seguro de cerrar la caja actual?')) return;
-
-  try {
-    const res = await api.post('/caja/cerrar', { monto_final: montoFinal.value });
-    const r = res.data.resumen;
-    alert(
-      `Cierre Exitoso:\n` +
-      `- Efectivo Esperado: S/ ${r.monto_esperado.toFixed(2)}\n` +
-      `- Efectivo Recaudado: S/ ${r.monto_real.toFixed(2)}\n` +
-      `- Ventas Digitales: S/ ${(r.ventas_digitales || 0).toFixed(2)}\n` +
-      `- Diferencia Arqueo: S/ ${r.diferencia.toFixed(2)}`
-    );
-    montoFinal.value = null;
-    await obtenerEstadoCaja();
-  } catch (err) {
-    alert(err.response?.data?.message || 'Error al cerrar caja');
-  }
-};
-
-const formatearFecha = (fechaStr) => {
-  if (!fechaStr) return '-';
-  return new Date(fechaStr).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
-};
-
-onMounted(() => {
-  obtenerEstadoCaja();
-});
+const Metric = defineComponent({ props: { label: String, value: [Number, String], tone: String }, setup(props) { return () => h('div', { class: 'rounded-2xl border border-slate-100 bg-slate-50 p-4' }, [h('p', { class: 'text-xs font-semibold text-slate-500' }, props.label), h('p', { class: ['mt-1 text-xl font-black', props.tone === 'cyan' ? 'text-cyan-700' : props.tone === 'violet' ? 'text-violet-700' : 'text-slate-900'] }, 'S/ ' + money(props.value))]); } });
+const status = ref('cerrada'), loading = ref(true), saving = ref(false), cashData = ref({}), openingAmount = ref(0), closingAmount = ref(null), confirmClose = ref(false), notice = ref(null);
+const money = (value) => Number(value || 0).toFixed(2);
+const formatDate = (value) => value ? new Date(value).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+function show(message, type = 'success') { notice.value = { message, type }; }
+async function loadStatus() { loading.value = true; try { const { data } = await api.get('/caja/estado'); status.value = data.estado; cashData.value = data; } catch { show('No se pudo consultar el estado de caja.', 'error'); } finally { loading.value = false; } }
+async function openCashRegister() { saving.value = true; try { await api.post('/caja/abrir', { monto_inicial: openingAmount.value }); show('Caja abierta correctamente.'); await loadStatus(); } catch (error) { show(error.response?.data?.message || 'No fue posible abrir la caja.', 'error'); } finally { saving.value = false; } }
+async function closeCashRegister() { saving.value = true; try { const { data } = await api.post('/caja/cerrar', { monto_final: closingAmount.value }); const difference = data.resumen?.diferencia; show('Caja cerrada.' + (difference !== undefined ? ' Diferencia de arqueo: S/ ' + money(difference) + '.' : '')); confirmClose.value = false; closingAmount.value = null; await loadStatus(); } catch (error) { show(error.response?.data?.message || 'No fue posible cerrar la caja.', 'error'); } finally { saving.value = false; } }
+onMounted(loadStatus);
 </script>

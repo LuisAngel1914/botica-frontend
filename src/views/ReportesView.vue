@@ -1,52 +1,14 @@
 <template>
-  <div class="min-h-screen bg-gray-100 font-sans p-4 sm:p-6 print:bg-white print:p-0">
+  <div class="space-y-6 print:bg-white print:p-0">
     <div class="max-w-7xl mx-auto space-y-6 print:max-w-full">
       
-      <!-- HEADER INTERFAZ WEB (Oculto al imprimir o guardar en PDF) -->
-      <div class="bg-white p-5 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-gray-100 print:hidden">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            📊 Reportes y Estadísticas
-          </h1>
-          <p class="text-xs sm:text-sm text-gray-500 mt-1">
-            Resumen general del rendimiento de ventas e inventario
-          </p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-          <button 
-            @click="exportarExcel" 
-            :disabled="cargando"
-            class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm px-3.5 py-2 rounded-lg font-semibold flex items-center gap-1.5 shadow transition disabled:opacity-50"
-          >
-            📊 Exportar Excel
-          </button>
-
-          <button 
-            @click="exportarPDF" 
-            :disabled="cargando"
-            class="bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm px-3.5 py-2 rounded-lg font-semibold flex items-center gap-1.5 shadow transition disabled:opacity-50"
-          >
-            📄 Descargar PDF
-          </button>
-
-          <button 
-            @click="cargarDatosReportes" 
-            :disabled="cargando"
-            class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs sm:text-sm px-3.5 py-2 rounded-lg font-semibold transition flex items-center gap-2 disabled:opacity-50"
-          >
-            <span :class="{ 'animate-spin': cargando }">🔄</span>
-            {{ cargando ? 'Cargando...' : 'Actualizar' }}
-          </button>
-
-          <router-link 
-            to="/pos" 
-            class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3.5 py-2 rounded-lg font-semibold shadow transition"
-          >
-            ← Volver al POS
-          </router-link>
-        </div>
-      </div>
+      <PageHeader class="print:hidden" eyebrow="Inteligencia comercial" title="Reportes y estadísticas" description="Resumen general del rendimiento de ventas e inventario.">
+        <template #actions>
+          <button @click="exportarExcel" :disabled="cargando" class="btn bg-emerald-600 text-white hover:bg-emerald-700"><span>Exportar Excel</span></button>
+          <button @click="exportarPDF" :disabled="cargando" class="btn bg-red-600 text-white hover:bg-red-700"><span>Imprimir / PDF</span></button>
+          <button @click="cargarDatosReportes" :disabled="cargando" class="btn btn-secondary">{{ cargando ? 'Actualizando…' : 'Actualizar' }}</button>
+        </template>
+      </PageHeader>
 
       <!-- MEMBRETE CORPORATIVO EXCLUSIVO PARA PDF/IMPRESIÓN -->
       <div class="hidden print:block border-b-2 border-gray-800 pb-4 mb-6">
@@ -166,6 +128,7 @@ import { ref, computed, onMounted } from 'vue';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import api from '../api/axios';
+import PageHeader from '../components/ui/PageHeader.vue';
 
 const totalVentasHoy = ref(0);
 const transaccionesHoy = ref(0);

@@ -1,131 +1,46 @@
 <template>
-  <div class="fixed bottom-5 right-5 z-50">
-    <!-- Botón Flotante -->
-    <button 
-      @click="abierto = !abierto" 
-      class="bg-blue-600 hover:bg-blue-700 text-white p-3.5 rounded-full shadow-2xl flex items-center justify-center transition-all transform hover:scale-105"
-      title="Asistente Farmacéutico IA"
-    >
-      <span v-if="!abierto" class="text-xl">🤖</span>
-      <span v-else class="text-xl font-bold">✕</span>
+  <div class="fixed bottom-5 right-5 z-40">
+    <button class="grid h-13 w-13 place-items-center rounded-2xl bg-slate-950 text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-cyan-700 focus-visible:outline-cyan-400" :aria-expanded="open" aria-controls="assistant-panel" @click="open = !open">
+      <MessageCircle v-if="!open" :size="22" /><X v-else :size="22" /><span class="sr-only">{{ open ? 'Cerrar asistente' : 'Abrir asistente' }}</span>
     </button>
-
-    <!-- Ventana del Chat -->
-    <div 
-      v-if="abierto" 
-      class="absolute bottom-16 right-0 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden text-xs sm:text-sm h-[450px]"
-    >
-      <!-- Cabecera -->
-      <div class="bg-blue-600 text-white p-3 flex justify-between items-center shadow-sm">
-        <div class="flex items-center gap-2">
-          <span class="text-lg">🤖</span>
-          <div>
-            <p class="font-bold text-sm">Asistente Farmacéutico IA</p>
-            <p class="text-[10px] text-blue-100">Consulta equivalentes, dosis y stock</p>
-          </div>
-        </div>
-        <button @click="abierto = false" class="text-white hover:text-gray-200 text-sm font-bold">✕</button>
+    <section v-if="open" id="assistant-panel" class="absolute bottom-16 right-0 flex h-[min(32rem,calc(100vh-7rem))] w-[calc(100vw-2.5rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+      <header class="flex items-center gap-3 bg-slate-950 p-4 text-white"><span class="grid h-9 w-9 place-items-center rounded-xl bg-cyan-400 text-slate-950"><Sparkles :size="18" /></span><div><h2 class="text-sm font-semibold">Asistente farmacéutico</h2><p class="text-xs text-slate-400">Consulta stock y equivalentes</p></div></header>
+      <div ref="chatBox" class="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4" aria-live="polite">
+        <div v-for="(message, index) in messages" :key="index" class="flex" :class="message.role === 'user' ? 'justify-end' : 'justify-start'"><p class="max-w-[85%] rounded-2xl px-3 py-2.5 text-sm leading-6" :class="message.role === 'user' ? 'rounded-br-sm bg-cyan-700 text-white' : 'rounded-bl-sm border border-slate-200 bg-white text-slate-700'">{{ message.text }}</p></div>
+        <div v-if="loading" class="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle :size="16" class="animate-spin" /> Consultando…</div>
       </div>
-
-      <!-- Lista de Mensajes -->
-      <div ref="chatBox" class="flex-1 p-3 overflow-y-auto space-y-3 bg-gray-50">
-        <div 
-          v-for="(msg, index) in mensajes" 
-          :key="index"
-          :class="msg.rol === 'user' ? 'justify-end' : 'justify-start'"
-          class="flex"
-        >
-          <div 
-            :class="msg.rol === 'user' ? 'bg-blue-600 text-white rounded-l-xl rounded-tr-xl' : 'bg-white text-gray-800 border border-gray-200 rounded-r-xl rounded-tl-xl shadow-sm'"
-            class="max-w-[85%] p-2.5 whitespace-pre-line leading-relaxed"
-          >
-            {{ msg.texto }}
-          </div>
-        </div>
-
-        <div v-if="cargando" class="flex justify-start">
-          <div class="bg-white border border-gray-200 p-2.5 rounded-r-xl rounded-tl-xl text-gray-400 animate-pulse italic flex items-center gap-2">
-            <span>🤖</span> Consultando a la IA...
-          </div>
-        </div>
-      </div>
-
-      <!-- Input de Texto -->
-      <div class="p-2 bg-white border-t border-gray-200 flex gap-1.5">
-        <input 
-          v-model="nuevoMensaje" 
-          @keyup.enter="enviarMensaje"
-          type="text" 
-          placeholder="Ej: ¿Qué alternativa hay para Paracetamol 500mg?"
-          class="flex-1 p-2 border border-gray-300 rounded-lg outline-none text-xs focus:border-blue-500"
-          :disabled="cargando"
-        />
-        <button 
-          @click="enviarMensaje" 
-          :disabled="cargando || !nuevoMensaje.trim()"
-          class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-3 py-2 rounded-lg font-bold text-xs shadow transition"
-        >
-          Enviar
-        </button>
-      </div>
-    </div>
+      <form class="flex gap-2 border-t border-slate-200 p-3" @submit.prevent="sendMessage"><input v-model="draft" class="field-control min-w-0 py-2" :disabled="loading" placeholder="Escribe tu consulta…" aria-label="Mensaje al asistente" /><button class="btn btn-primary px-3 py-2" :disabled="loading || !draft.trim()" aria-label="Enviar mensaje"><Send :size="17" /></button></form>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue';
+import { nextTick, ref } from 'vue';
+import { LoaderCircle, MessageCircle, Send, Sparkles, X } from 'lucide-vue-next';
 import api from '../api/axios';
 
-const abierto = ref(false);
-const cargando = ref(false);
-const nuevoMensaje = ref('');
+const open = ref(false);
+const loading = ref(false);
+const draft = ref('');
 const chatBox = ref(null);
+const messages = ref([{ role: 'assistant', text: 'Hola, soy tu asistente farmacéutico. Puedo ayudarte con productos, stock y equivalentes.' }]);
 
-const mensajes = ref([
-  { rol: 'ia', texto: '¡Hola! Soy tu asistente farmacéutico. Pregúntame sobre equivalentes de medicamentos, recetas o productos del sistema.' }
-]);
-
-const scrollToBottom = async () => {
-  await nextTick();
-  if (chatBox.value) {
-    chatBox.value.scrollTop = chatBox.value.scrollHeight;
-  }
-};
-
-const enviarMensaje = async () => {
-  const txt = nuevoMensaje.value.trim();
-  if (!txt || cargando.value) return;
-
-  mensajes.value.push({ rol: 'user', texto: txt });
-  nuevoMensaje.value = '';
-  cargando.value = true;
+async function scrollToBottom() { await nextTick(); if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight; }
+async function sendMessage() {
+  const text = draft.value.trim();
+  if (!text || loading.value) return;
+  messages.value.push({ role: 'user', text });
+  draft.value = '';
+  loading.value = true;
   await scrollToBottom();
-
   try {
-    // Intento 1: Endpoint estándar relativo
-    const res = await api.post('/chat', { mensaje: txt });
-    mensajes.value.push({ rol: 'ia', texto: res.data.respuesta });
-  } catch (err1) {
-    try {
-      // Intento 2: Endpoint protegido
-      const resAuth = await api.post('/chat-auth', { mensaje: txt });
-      mensajes.value.push({ rol: 'ia', texto: resAuth.data.respuesta });
-    } catch (err2) {
-      try {
-        // Intento 3: URL Absoluta directa a Railway
-        const resDirect = await api.post('https://botica-backend-production.up.railway.app/api/chat', { mensaje: txt });
-        mensajes.value.push({ rol: 'ia', texto: resDirect.data.respuesta });
-      } catch (err3) {
-        console.error('Error final en chat:', err3);
-        mensajes.value.push({ 
-          rol: 'ia', 
-          texto: '⚠️ Ocurrió un error al consultar con el asistente. Intenta de nuevo.' 
-        });
-      }
-    }
+    const { data } = await api.post('/chat', { mensaje: text });
+    messages.value.push({ role: 'assistant', text: data.respuesta || 'No recibí una respuesta válida. Intenta nuevamente.' });
+  } catch {
+    messages.value.push({ role: 'assistant', text: 'No pude consultar el asistente en este momento. Inténtalo nuevamente.' });
   } finally {
-    cargando.value = false;
+    loading.value = false;
     await scrollToBottom();
   }
-};
+}
 </script>

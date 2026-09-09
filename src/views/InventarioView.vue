@@ -1,22 +1,10 @@
 <template>
-  <div class="p-3 sm:p-6 bg-gray-100 min-h-screen font-sans">
+  <div class="space-y-6">
     <div class="max-w-7xl mx-auto">
       
-      <!-- ENCABEZADO Y BOTONES DE NAVEGACIÓN RESPONSIVOS -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white p-4 rounded-xl shadow-sm">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Gestión de Inventario y Lotes</h1>
-          <p class="text-xs text-gray-500">Administración de stock, precios y control FEFO / recetas</p>
-        </div>
-        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-          <router-link to="/pos" class="flex-1 sm:flex-initial text-center bg-gray-800 text-white text-xs px-4 py-2.5 rounded-lg font-bold hover:bg-gray-900 shadow transition">
-            🛒 Ir al POS
-          </router-link>
-          <button @click="abrirModalProducto()" class="flex-1 sm:flex-initial bg-blue-600 text-white text-xs px-4 py-2.5 rounded-lg font-bold hover:bg-blue-700 shadow transition">
-            + Nuevo Producto
-          </button>
-        </div>
-      </div>
+      <PageHeader eyebrow="Catálogo y abastecimiento" title="Inventario y lotes" description="Administra existencias, precios, vencimientos y productos bajo receta.">
+        <template #actions><button class="btn btn-primary" @click="abrirModalProducto()">Nuevo producto</button></template>
+      </PageHeader>
 
       <!-- TABLA DE PRODUCTOS (Scroll Horizontal en Movil) -->
       <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
@@ -152,6 +140,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '../api/axios';
+import PageHeader from '../components/ui/PageHeader.vue';
 
 const productos = ref([]);
 const mostrarModalProd = ref(false);

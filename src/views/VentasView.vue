@@ -1,31 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gray-100 p-3 sm:p-6 font-sans">
+  <div class="space-y-6">
     <div class="max-w-7xl mx-auto space-y-4 sm:space-y-6">
       
-      <!-- Cabecera y Navegación Responsiva -->
-      <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-black text-gray-800 flex items-center gap-2">
-            📋 Historial de Ventas
-          </h1>
-          <p class="text-xs text-gray-500 mt-0.5">Consulta, filtra y reimprime comprobantes de venta</p>
-        </div>
-
-        <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-          <router-link 
-            to="/" 
-            class="flex-1 sm:flex-initial text-center bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3.5 py-2.5 rounded-xl font-semibold shadow transition"
-          >
-            💻 Ir al POS
-          </router-link>
-          <router-link 
-            to="/caja" 
-            class="flex-1 sm:flex-initial text-center bg-green-700 hover:bg-green-800 text-white text-xs sm:text-sm px-3.5 py-2.5 rounded-xl font-semibold shadow transition"
-          >
-            💵 Caja
-          </router-link>
-        </div>
-      </div>
+      <PageHeader eyebrow="Operaciones comerciales" title="Historial de ventas" description="Consulta, filtra y reimprime comprobantes de venta." />
 
       <!-- Barra de Búsqueda y Filtros de Fecha -->
       <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
@@ -209,6 +186,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import api from '../api/axios';
+import PageHeader from '../components/ui/PageHeader.vue';
 
 const ventas = ref([]);
 const cargando = ref(false);
@@ -284,7 +262,7 @@ const verDetalle = (venta) => {
 };
 
 const reimprimirTicket = (ventaId) => {
-  window.open(`http://localhost:8000/api/ventas/${ventaId}/ticket`, '_blank');
+  window.open(`${api.defaults.baseURL}/ventas/${ventaId}/ticket`, '_blank');
 };
 
 onMounted(() => {
