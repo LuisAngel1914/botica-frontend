@@ -12,7 +12,6 @@
       </nav>
       <button class="mt-auto flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white" @click="logout"><LogOut :size="18" /><span>Cerrar sesión</span></button>
     </aside>
-
     <main class="min-h-screen lg:pl-64">
       <header class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur lg:px-8">
         <div><p class="text-xs font-medium uppercase tracking-wider text-slate-400">Botica Operations</p><h1 class="text-sm font-semibold text-slate-800">{{ title }}</h1></div>
@@ -20,21 +19,16 @@
       </header>
       <section class="mx-auto max-w-[1600px] p-4 pb-24 sm:p-6 lg:p-8"><slot /></section>
     </main>
-
     <nav class="fixed inset-x-0 bottom-0 z-30 flex justify-around border-t border-slate-200 bg-white px-2 py-2 lg:hidden">
-      <RouterLink v-for="item in mobileNavigation" :key="item.to" :to="item.to" class="flex min-w-14 flex-col items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium text-slate-500" active-class="text-cyan-700">
-        <component :is="item.icon" :size="19" /><span>{{ item.label }}</span>
-      </RouterLink>
+      <RouterLink v-for="item in mobileNavigation" :key="item.to" :to="item.to" class="flex min-w-14 flex-col items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium text-slate-500" active-class="text-cyan-700"><component :is="item.icon" :size="19" /><span>{{ item.label }}</span></RouterLink>
     </nav>
   </div>
 </template>
-
 <script setup>
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { BarChart3, Boxes, CircleDollarSign, ClipboardList, LogOut, ShoppingCart, Users } from 'lucide-vue-next';
 import { useAuth } from '../composables/useAuth';
-
 const route = useRoute();
 const router = useRouter();
 const { currentUser, role, isAdmin, clearSession } = useAuth();
@@ -42,8 +36,7 @@ const navigation = computed(() => [
   { to: '/pos', label: 'Punto de venta', icon: ShoppingCart },
   { to: '/ventas', label: 'Ventas', icon: ClipboardList },
   { to: '/caja', label: 'Caja', icon: CircleDollarSign },
-  { to: '/inventario', label: 'Inventario', icon: Boxes },
-  ...(isAdmin.value ? [{ to: '/reportes', label: 'Reportes', icon: BarChart3 }, { to: '/usuarios', label: 'Usuarios', icon: Users }] : []),
+  ...(isAdmin.value ? [{ to: '/inventario', label: 'Inventario', icon: Boxes }, { to: '/reportes', label: 'Reportes', icon: BarChart3 }, { to: '/usuarios', label: 'Usuarios', icon: Users }] : []),
 ]);
 const mobileNavigation = computed(() => navigation.value.slice(0, 5));
 const title = computed(() => route.meta.title || 'Panel de operaciones');
