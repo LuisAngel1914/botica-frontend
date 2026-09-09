@@ -1,5 +1,5 @@
 <template>
-  <div class="p-3 sm:p-6 bg-gray-100 min-h-screen font-sans">
+  <div class="space-y-6">
     <div class="max-w-7xl mx-auto">
       
       <!-- ENCABEZADO Y BOTONES DE NAVEGACIÓN RESPONSIVOS -->
