@@ -6,6 +6,7 @@ const routes = [
   { path: '/pos', name: 'pos', component: () => import('../views/PosView.vue'), meta: { requiresAuth: true, title: 'Punto de venta' } },
   { path: '/ventas', name: 'ventas', component: () => import('../views/VentasView.vue'), meta: { requiresAuth: true, title: 'Historial de ventas' } },
   { path: '/caja', name: 'caja', component: () => import('../views/CajaView.vue'), meta: { requiresAuth: true, title: 'Control de caja' } },
+  { path: '/compras', name: 'compras', component: () => import('../views/ComprasView.vue'), meta: { requiresAuth: true, requiresAdmin: true, title: 'Proveedores y compras' } },
   { path: '/clientes', name: 'clientes', component: () => import('../views/ClientesView.vue'), meta: { requiresAuth: true, requiresAdmin: true, title: 'Clientes' } },
   { path: '/inventario', name: 'inventario', component: () => import('../views/InventarioView.vue'), meta: { requiresAuth: true, requiresAdmin: true, title: 'Inventario' } },
   { path: '/reportes', name: 'reportes', component: () => import('../views/ReportesView.vue'), meta: { requiresAuth: true, requiresAdmin: true, title: 'Reportes' } },
