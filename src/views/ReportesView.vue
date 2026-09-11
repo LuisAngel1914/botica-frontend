@@ -18,6 +18,11 @@
       </article>
     </section>
 
+    <section class="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+      <article class="app-card p-5"><p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Rentabilidad del mes</p><h2 class="mt-1 text-lg font-bold text-slate-900">Margen con trazabilidad</h2><div class="mt-5 grid gap-3 sm:grid-cols-2"><div class="rounded-xl bg-emerald-50 p-4"><p class="text-xs font-semibold text-emerald-800">Confirmado</p><p class="mt-1 text-2xl font-black text-emerald-900">S/ {{ money(dashboard.rentabilidad?.margen_confirmado) }}</p><p class="mt-1 text-xs text-emerald-700">Costo capturado al vender.</p></div><div class="rounded-xl bg-amber-50 p-4"><p class="text-xs font-semibold text-amber-800">Estimado histórico</p><p class="mt-1 text-2xl font-black text-amber-900">S/ {{ money(dashboard.rentabilidad?.margen_estimado_historico) }}</p><p class="mt-1 text-xs text-amber-700">Usa costo actual para ventas antiguas.</p></div></div></article>
+      <article class="app-card overflow-hidden"><div class="border-b border-slate-100 p-5"><p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Rentabilidad</p><h2 class="mt-1 text-lg font-bold text-slate-900">Productos con mejor margen</h2></div><div v-if="dashboard.productos_rentables?.length" class="divide-y divide-slate-100"><div v-for="product in dashboard.productos_rentables" :key="product.id" class="flex items-center justify-between gap-3 p-4"><div class="min-w-0"><p class="truncate font-bold text-slate-800">{{ product.nombre }}</p><p class="text-xs text-slate-500">{{ product.unidades }} un. · {{ product.lineas_estimadas ? 'Incluye histórico estimado' : 'Margen confirmado' }}</p></div><strong class="shrink-0 text-emerald-700">S/ {{ money(Number(product.margen_confirmado) + Number(product.margen_estimado_historico)) }}</strong></div></div><EmptyState v-else icon="trending" title="Aún no hay margen calculable" description="Las próximas ventas registrarán su costo unitario." /></article>
+    </section>
+
     <section class="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.65fr)]">
       <article class="app-card overflow-hidden">
         <div class="flex items-center justify-between border-b border-slate-100 p-5"><div><p class="text-xs font-semibold uppercase tracking-wider text-cyan-700">Rendimiento</p><h2 class="mt-1 text-lg font-bold text-slate-900">Productos más vendidos del mes</h2></div><TrendingUp class="text-cyan-700" :size="22" /></div>
@@ -76,12 +81,15 @@ const dashboard = ref({
   productos_por_vencer: [],
   top_productos: [],
   desglose_pagos: {},
+  rentabilidad: { margen_confirmado: 0, margen_estimado_historico: 0, ingresos_confirmados: 0, ingresos_estimados_historico: 0 },
+  productos_rentables: [],
 });
 
 const metrics = computed(() => [
   { label: 'Ventas hoy', value: 'S/ ' + money(dashboard.value.resumen_caja.ventas_hoy_monto), detail: dashboard.value.resumen_caja.ventas_hoy_cantidad + ' transacciones', icon: ShoppingBag, iconClass: 'bg-cyan-100 text-cyan-800' },
   { label: 'Ventas del mes', value: 'S/ ' + money(dashboard.value.resumen_caja.ventas_mes_monto), detail: 'Solo ventas completadas', icon: TrendingUp, iconClass: 'bg-emerald-100 text-emerald-800' },
   { label: 'Por reabastecer', value: dashboard.value.alertas_inventario.total_stock_critico, detail: 'Productos bajo su mínimo', icon: PackageX, iconClass: 'bg-amber-100 text-amber-800' },
+  { label: 'Margen confirmado', value: 'S/ ' + money(dashboard.value.rentabilidad?.margen_confirmado), detail: 'Ventas con costo congelado', icon: TrendingUp, iconClass: 'bg-emerald-100 text-emerald-800' },
   { label: 'Clientes', value: dashboard.value.resumen_caja.total_clientes, detail: 'Registrados en el sistema', icon: UsersRound, iconClass: 'bg-violet-100 text-violet-800' },
 ]);
 const topProducts = computed(() => dashboard.value.top_productos || []);
