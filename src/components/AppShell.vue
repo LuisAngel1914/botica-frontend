@@ -14,9 +14,14 @@ import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { BarChart3, Boxes, CircleDollarSign, ClipboardList, History, LogOut, ShoppingCart, Users } from 'lucide-vue-next';
 import { useAuth } from '../composables/useAuth';
+import api from '../api/axios';
 const route = useRoute(); const router = useRouter();
 const { currentUser, role, isAdmin, clearSession } = useAuth();
-const navigation = computed(() => [{ to: '/pos', label: 'Punto de venta', icon: ShoppingCart }, { to: '/ventas', label: 'Ventas', icon: ClipboardList }, { to: '/caja', label: 'Caja', icon: CircleDollarSign }, ...(isAdmin.value ? [{ to: '/clientes', label: 'Clientes', icon: Users }, { to: '/compras', label: 'Compras', icon: Boxes }, { to: '/inventario', label: 'Inventario', icon: Boxes }, { to: '/reportes', label: 'Reportes', icon: BarChart3 }, { to: '/actividad', label: 'Actividad', icon: History }, { to: '/usuarios', label: 'Usuarios', icon: Users }] : [])]);
+const navigation = computed(() => [{ to: '/pos', label: 'Punto de venta', icon: ShoppingCart }, { to: '/caja', label: 'Caja', icon: CircleDollarSign }, ...(isAdmin.value ? [{ to: '/ventas', label: 'Ventas', icon: ClipboardList }, { to: '/clientes', label: 'Clientes', icon: Users }, { to: '/compras', label: 'Compras', icon: Boxes }, { to: '/inventario', label: 'Inventario', icon: Boxes }, { to: '/reportes', label: 'Reportes', icon: BarChart3 }, { to: '/actividad', label: 'Actividad', icon: History }, { to: '/usuarios', label: 'Usuarios', icon: Users }] : [])]);
 const mobileNavigation = computed(() => navigation.value.slice(0, 5)); const title = computed(() => route.meta.title || 'Panel de operaciones'); const initials = computed(() => (currentUser.value.name || 'OP').split(' ').map(word => word[0]).slice(0, 2).join('').toUpperCase());
-async function logout() { clearSession(); await router.replace({ name: 'login' }); }
+async function logout() {
+  try { await api.post('/logout'); } catch { /* La sesión local se elimina incluso si la red falla. */ }
+  clearSession();
+  await router.replace({ name: 'login' });
+}
 </script>
