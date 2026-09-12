@@ -66,7 +66,7 @@
 
       <article class="app-card overflow-hidden">
         <div class="flex items-center justify-between border-b border-slate-100 p-5"><div><p class="text-xs font-semibold uppercase tracking-wider text-red-700">Acción inmediata</p><h2 class="mt-1 text-lg font-bold text-slate-900">Lotes vencidos</h2></div><span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-800">{{ dashboard.alertas_inventario.total_vencidos }}</span></div>
-        <ul v-if="expiredLots.length" class="divide-y divide-slate-100"><li v-for="lot in expiredLots" :key="lot.id"><button class="flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-red-50/60" @click="goToInventory(lot.producto_id)"><div class="min-w-0"><p class="truncate text-sm font-bold text-slate-800">{{ lot.producto?.nombre || 'Producto' }}</p><p class="mt-0.5 text-xs text-slate-500">Lote {{ lot.numero_lote }} · {{ lot.stock }} un. · Revisar inventario</p></div><span class="shrink-0 text-xs font-bold text-red-700">Venció {{ formatDate(lot.fecha_vencimiento) }}</span></button></li></ul>
+        <ul v-if="expiredLots.length" class="divide-y divide-slate-100"><li v-for="lot in expiredLots" :key="lot.id"><button class="flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-red-50/60" @click="goToInventory(lot.producto_id, 'baja', lot.id)"><div class="min-w-0"><p class="truncate text-sm font-bold text-slate-800">{{ lot.producto?.nombre || 'Producto' }}</p><p class="mt-0.5 text-xs text-slate-500">Lote {{ lot.numero_lote }} · {{ lot.stock }} un. · Revisar inventario</p></div><span class="shrink-0 text-xs font-bold text-red-700">Venció {{ formatDate(lot.fecha_vencimiento) }}</span></button></li></ul>
         <EmptyState v-else icon="calendar" title="Sin lotes vencidos" description="No hay existencias vencidas para retirar." />
       </article>
 
@@ -132,7 +132,7 @@ const formatDate = (value) => new Date(value + 'T00:00:00').toLocaleDateString('
 const formatDateTime = (value) => value ? new Date(value).toLocaleString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 const paymentWidth = (amount) => totalPayments.value ? Math.max(4, (Number(amount) / totalPayments.value) * 100) + '%' : '0%';
 const printReport = () => window.print();
-const goToInventory = (productId, action = 'review') => router.push({ name: 'inventario', query: { producto: productId, action } });
+const goToInventory = (productId, action = 'review', lotId = null) => router.push({ name: 'inventario', query: { producto: productId, action, ...(lotId ? { lote: lotId } : {}) } });
 
 async function loadDashboard() {
   loading.value = true;
