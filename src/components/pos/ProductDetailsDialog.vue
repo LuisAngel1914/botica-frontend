@@ -39,7 +39,7 @@ const sellableStock = computed(() => Number(props.product?.stock_disponible || 0
 const stockClass = computed(() => sellableStock.value > 5 ? 'bg-emerald-100 text-emerald-800' : sellableStock.value > 0 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800');
 const stockLabel = computed(() => sellableStock.value > 0 ? 'Disponible para venta' : 'Sin stock vigente');
 const expiryDate = computed(() => {
-  const date = props.product?.lotes?.[0]?.fecha_vencimiento;
-  return date ? new Date(date + 'T00:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Sin lote activo';
+  const lot = props.product?.lotes?.find((item) => new Date(item.fecha_vencimiento + 'T00:00:00') >= new Date(new Date().toDateString()));
+  return lot ? new Date(lot.fecha_vencimiento + 'T00:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Sin lote vigente';
 });
 </script>
