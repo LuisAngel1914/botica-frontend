@@ -90,7 +90,7 @@ const router = useRouter();
 const loading = ref(false);
 const error = ref('');
 const dashboard = ref({
-  resumen_caja: { ventas_hoy_monto: 0, ventas_hoy_cantidad: 0, ventas_mes_monto: 0, total_clientes: 0 },
+  resumen_caja: { ventas_hoy_monto: 0, ventas_hoy_cantidad: 0, ventas_mes_monto: 0, devoluciones_hoy: 0, devoluciones_mes: 0, total_clientes: 0 },
   alertas_inventario: { total_stock_critico: 0, total_por_vencer: 0, total_vencidos: 0 },
   estado_caja: { estado: 'cerrada', mensaje: 'No hay caja abierta actualmente.' },
   productos_stock_critico: [],
@@ -103,8 +103,9 @@ const dashboard = ref({
 });
 
 const metrics = computed(() => [
-  { label: 'Ventas hoy', value: 'S/ ' + money(dashboard.value.resumen_caja.ventas_hoy_monto), detail: dashboard.value.resumen_caja.ventas_hoy_cantidad + ' transacciones', icon: ShoppingBag, iconClass: 'bg-cyan-100 text-cyan-800' },
-  { label: 'Ventas del mes', value: 'S/ ' + money(dashboard.value.resumen_caja.ventas_mes_monto), detail: 'Solo ventas completadas', icon: TrendingUp, iconClass: 'bg-emerald-100 text-emerald-800' },
+  { label: 'Ventas netas hoy', value: 'S/ ' + money(dashboard.value.resumen_caja.ventas_hoy_monto), detail: dashboard.value.resumen_caja.ventas_hoy_cantidad + ' transacciones, menos devoluciones', icon: ShoppingBag, iconClass: 'bg-cyan-100 text-cyan-800' },
+  { label: 'Ventas netas del mes', value: 'S/ ' + money(dashboard.value.resumen_caja.ventas_mes_monto), detail: 'Ventas completadas menos devoluciones', icon: TrendingUp, iconClass: 'bg-emerald-100 text-emerald-800' },
+  { label: 'Devoluciones hoy', value: 'S/ ' + money(dashboard.value.resumen_caja.devoluciones_hoy), detail: 'Reembolsos registrados hoy', icon: CreditCard, iconClass: 'bg-amber-100 text-amber-800' },
   { label: 'Por reabastecer', value: dashboard.value.alertas_inventario.total_stock_critico, detail: 'Productos bajo su mínimo', icon: PackageX, iconClass: 'bg-amber-100 text-amber-800' },
   { label: 'Lotes vencidos', value: dashboard.value.alertas_inventario.total_vencidos, detail: 'Retiro de inventario requerido', icon: CalendarClock, iconClass: 'bg-red-100 text-red-800' },
   { label: 'Caja', value: dashboard.value.estado_caja?.estado === 'abierta' ? 'Abierta' : 'Cerrada', detail: dashboard.value.estado_caja?.estado === 'abierta' ? 'Saldo esperado en tiempo real' : 'Sin operación activa', icon: CircleDollarSign, iconClass: dashboard.value.estado_caja?.estado === 'abierta' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700' },
