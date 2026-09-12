@@ -36,5 +36,6 @@ const brokenImageIds = ref(new Set());
 const quickProducts = computed(() => { const favorites = props.products.filter((product) => props.favoriteIds.includes(product.id)); const recent = props.recentProducts.filter((product) => !props.favoriteIds.includes(product.id)); return [...favorites, ...recent].slice(0, 8); });
 const money = (value) => Number(value || 0).toFixed(2);
 function hideBrokenImage(productId) { brokenImageIds.value = new Set([...brokenImageIds.value, productId]); }
-function expiryAlert(product) { const date = product.lotes?.[0]?.fecha_vencimiento; if (!date) return null; const days = Math.ceil((new Date(date) - new Date()) / 86400000); if (days <= 15) return { label: 'Vence pronto', class: 'bg-red-600 text-white' }; if (days <= 60) return { label: 'Vence < 60d', class: 'bg-amber-100 text-amber-800' }; return null; }
+function nextValidLot(product) { return product.lotes?.find((lot) => new Date(lot.fecha_vencimiento + 'T00:00:00') >= new Date(new Date().toDateString())); }
+function expiryAlert(product) { const lot = nextValidLot(product); if (!lot) return Number(product.stock_actual) > 0 ? { label: 'Sin lote vigente', class: 'bg-red-600 text-white' } : null; const days = Math.ceil((new Date(lot.fecha_vencimiento + 'T00:00:00') - new Date()) / 86400000); if (days <= 15) return { label: 'Vence pronto', class: 'bg-red-600 text-white' }; if (days <= 60) return { label: 'Vence < 60d', class: 'bg-amber-100 text-amber-800' }; return null; }
 </script>
