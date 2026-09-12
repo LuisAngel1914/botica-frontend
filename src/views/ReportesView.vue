@@ -60,19 +60,19 @@
     <section class="grid gap-6 xl:grid-cols-3">
       <article class="app-card overflow-hidden">
         <div class="flex items-center justify-between border-b border-slate-100 p-5"><div><p class="text-xs font-semibold uppercase tracking-wider text-amber-700">Atención requerida</p><h2 class="mt-1 text-lg font-bold text-slate-900">Stock crítico</h2></div><span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">{{ dashboard.alertas_inventario.total_stock_critico }}</span></div>
-        <ul v-if="lowStock.length" class="divide-y divide-slate-100"><li v-for="product in lowStock" :key="product.id" class="flex items-center justify-between gap-3 p-4"><div class="min-w-0"><p class="truncate text-sm font-bold text-slate-800">{{ product.nombre }}</p><p class="mt-0.5 text-xs text-slate-500">Mínimo recomendado: {{ product.stock_minimo }}</p></div><span class="rounded-lg bg-amber-50 px-2.5 py-1 text-sm font-black text-amber-800">{{ product.stock_actual }} un.</span></li></ul>
+        <ul v-if="lowStock.length" class="divide-y divide-slate-100"><li v-for="product in lowStock" :key="product.id"><button class="flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-amber-50/60" @click="goToInventory(product.id, 'lote')"><div class="min-w-0"><p class="truncate text-sm font-bold text-slate-800">{{ product.nombre }}</p><p class="mt-0.5 text-xs text-slate-500">Mínimo recomendado: {{ product.stock_minimo }} · Registrar reposición</p></div><span class="rounded-lg bg-amber-50 px-2.5 py-1 text-sm font-black text-amber-800">{{ product.stock_actual }} un.</span></button></li></ul>
         <EmptyState v-else icon="package" title="Stock saludable" description="No hay productos por debajo del mínimo." />
       </article>
 
       <article class="app-card overflow-hidden">
         <div class="flex items-center justify-between border-b border-slate-100 p-5"><div><p class="text-xs font-semibold uppercase tracking-wider text-red-700">Acción inmediata</p><h2 class="mt-1 text-lg font-bold text-slate-900">Lotes vencidos</h2></div><span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-800">{{ dashboard.alertas_inventario.total_vencidos }}</span></div>
-        <ul v-if="expiredLots.length" class="divide-y divide-slate-100"><li v-for="lot in expiredLots" :key="lot.id" class="flex items-center justify-between gap-3 p-4"><div class="min-w-0"><p class="truncate text-sm font-bold text-slate-800">{{ lot.producto?.nombre || 'Producto' }}</p><p class="mt-0.5 text-xs text-slate-500">Lote {{ lot.numero_lote }} · {{ lot.stock }} un.</p></div><span class="shrink-0 text-xs font-bold text-red-700">Venció {{ formatDate(lot.fecha_vencimiento) }}</span></li></ul>
+        <ul v-if="expiredLots.length" class="divide-y divide-slate-100"><li v-for="lot in expiredLots" :key="lot.id"><button class="flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-red-50/60" @click="goToInventory(lot.producto_id)"><div class="min-w-0"><p class="truncate text-sm font-bold text-slate-800">{{ lot.producto?.nombre || 'Producto' }}</p><p class="mt-0.5 text-xs text-slate-500">Lote {{ lot.numero_lote }} · {{ lot.stock }} un. · Revisar inventario</p></div><span class="shrink-0 text-xs font-bold text-red-700">Venció {{ formatDate(lot.fecha_vencimiento) }}</span></button></li></ul>
         <EmptyState v-else icon="calendar" title="Sin lotes vencidos" description="No hay existencias vencidas para retirar." />
       </article>
 
       <article class="app-card overflow-hidden">
         <div class="flex items-center justify-between border-b border-slate-100 p-5"><div><p class="text-xs font-semibold uppercase tracking-wider text-amber-700">Prevención</p><h2 class="mt-1 text-lg font-bold text-slate-900">Próximos vencimientos</h2></div><span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">{{ dashboard.alertas_inventario.total_por_vencer }}</span></div>
-        <ul v-if="expiringLots.length" class="divide-y divide-slate-100"><li v-for="lot in expiringLots" :key="lot.id" class="flex items-center justify-between gap-3 p-4"><div class="min-w-0"><p class="truncate text-sm font-bold text-slate-800">{{ lot.producto?.nombre || 'Producto' }}</p><p class="mt-0.5 text-xs text-slate-500">Lote {{ lot.numero_lote }} · {{ lot.stock }} un.</p></div><span class="shrink-0 text-xs font-bold text-red-700">{{ formatDate(lot.fecha_vencimiento) }}</span></li></ul>
+        <ul v-if="expiringLots.length" class="divide-y divide-slate-100"><li v-for="lot in expiringLots" :key="lot.id"><button class="flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-amber-50/60" @click="goToInventory(lot.producto_id)"><div class="min-w-0"><p class="truncate text-sm font-bold text-slate-800">{{ lot.producto?.nombre || 'Producto' }}</p><p class="mt-0.5 text-xs text-slate-500">Lote {{ lot.numero_lote }} · {{ lot.stock }} un. · Revisar inventario</p></div><span class="shrink-0 text-xs font-bold text-amber-700">{{ formatDate(lot.fecha_vencimiento) }}</span></button></li></ul>
         <EmptyState v-else icon="calendar" title="Sin vencimientos próximos" description="No hay lotes que venzan en los próximos 60 días." />
       </article>
     </section>
@@ -81,10 +81,12 @@
 
 <script setup>
 import { computed, defineComponent, h, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { AlertTriangle, CalendarClock, CircleDollarSign, CreditCard, PackageX, RefreshCw, ShoppingBag, TrendingUp } from 'lucide-vue-next';
 import api from '../api/axios';
 import PageHeader from '../components/ui/PageHeader.vue';
 
+const router = useRouter();
 const loading = ref(false);
 const error = ref('');
 const dashboard = ref({
@@ -130,6 +132,7 @@ const formatDate = (value) => new Date(value + 'T00:00:00').toLocaleDateString('
 const formatDateTime = (value) => value ? new Date(value).toLocaleString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 const paymentWidth = (amount) => totalPayments.value ? Math.max(4, (Number(amount) / totalPayments.value) * 100) + '%' : '0%';
 const printReport = () => window.print();
+const goToInventory = (productId, action = 'review') => router.push({ name: 'inventario', query: { producto: productId, action } });
 
 async function loadDashboard() {
   loading.value = true;
