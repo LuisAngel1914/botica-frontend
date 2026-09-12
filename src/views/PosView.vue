@@ -77,8 +77,9 @@ function searchProduct() {
 function openProductDetails(product) { selectedProductDetails.value = product; showProductDetails.value = true; }
 function closeProductDetails() { showProductDetails.value = false; selectedProductDetails.value = null; }
 function addProductFromDetails(product) { closeProductDetails(); addProduct(product); }
+const sellableStock = (product) => Number(product.stock_disponible || 0);
 function addProduct(product) {
-  if (Number(product.stock_actual) <= 0) return notify('Este producto no tiene stock disponible.', 'error');
+  if (sellableStock(product) <= 0) return notify('Este producto no tiene unidades vigentes disponibles para vender.', 'error');
   if (product.requiere_receta) {
     selectedPrescriptionProduct.value = product;
     prescription.value = { nombre_medico: '', cmp_medico: '' };
@@ -109,7 +110,7 @@ function insertIntoCart(product, recipe = null) {
   }
   cart.value.push({
     producto_id: product.id, nombre: product.nombre, precio_unitario: Number(product.precio_venta),
-    cantidad: 1, stock_max: Number(product.stock_actual), requiere_receta: Boolean(product.requiere_receta),
+    cantidad: 1, stock_max: sellableStock(product), requiere_receta: Boolean(product.requiere_receta),
     nombre_medico: recipe?.nombre_medico || null, cmp_medico: recipe?.cmp_medico || null,
   });
 }
