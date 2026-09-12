@@ -15,11 +15,11 @@
         <dl class="mt-5 grid grid-cols-2 gap-3">
           <div class="rounded-xl bg-slate-50 p-3"><dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Presentación</dt><dd class="mt-1 text-sm font-bold text-slate-800">{{ product.presentacion || 'No especificada' }}</dd></div>
           <div class="rounded-xl bg-slate-50 p-3"><dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Categoría</dt><dd class="mt-1 text-sm font-bold text-slate-800">{{ product.categoria || 'General' }}</dd></div>
-          <div class="rounded-xl bg-slate-50 p-3"><dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Disponible</dt><dd class="mt-1 text-sm font-bold text-slate-800">{{ product.stock_actual }} unidades</dd></div>
+          <div class="rounded-xl bg-slate-50 p-3"><dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Disponible</dt><dd class="mt-1 text-sm font-bold text-slate-800">{{ product.stock_disponible || 0 }} unidades</dd></div>
           <div class="rounded-xl bg-slate-50 p-3"><dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Vencimiento próximo</dt><dd class="mt-1 text-sm font-bold text-slate-800">{{ expiryDate }}</dd></div>
         </dl>
 
-        <div class="mt-5 flex items-end justify-between border-t border-slate-100 pt-5"><div><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Precio de venta</p><p class="mt-1 text-2xl font-black text-cyan-700">S/ {{ money(product.precio_venta) }}</p></div><button class="btn btn-primary" :disabled="Number(product.stock_actual) <= 0" @click="$emit('select', product)"><ShoppingCart :size="18" />Agregar</button></div>
+        <div class="mt-5 flex items-end justify-between border-t border-slate-100 pt-5"><div><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Precio de venta</p><p class="mt-1 text-2xl font-black text-cyan-700">S/ {{ money(product.precio_venta) }}</p></div><button class="btn btn-primary" :disabled="Number(product.stock_disponible || 0) <= 0" @click="$emit('select', product)"><ShoppingCart :size="18" />Agregar</button></div>
       </div>
     </section>
   </div>
@@ -35,8 +35,9 @@ const imageBroken = ref(false);
 watch(() => props.product?.id, () => { imageBroken.value = false; });
 
 const money = (value) => Number(value || 0).toFixed(2);
-const stockClass = computed(() => Number(props.product?.stock_actual) > 5 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800');
-const stockLabel = computed(() => Number(props.product?.stock_actual) > 0 ? 'Disponible' : 'Sin stock');
+const sellableStock = computed(() => Number(props.product?.stock_disponible || 0));
+const stockClass = computed(() => sellableStock.value > 5 ? 'bg-emerald-100 text-emerald-800' : sellableStock.value > 0 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800');
+const stockLabel = computed(() => sellableStock.value > 0 ? 'Disponible para venta' : 'Sin stock vigente');
 const expiryDate = computed(() => {
   const date = props.product?.lotes?.[0]?.fecha_vencimiento;
   return date ? new Date(date + 'T00:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Sin lote activo';
