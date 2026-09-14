@@ -33,7 +33,7 @@ const processing = ref(false);
 const notice = ref(null);
 const showPrescription = ref(false);
 const selectedPrescriptionProduct = ref(null);
-const prescription = ref({ nombre_medico: '', cmp_medico: '' });
+const prescription = ref({ prescriptor_nombre: '', prescriptor_colegiatura: '', fecha_emision: '', tipo: 'fisica', referencia: '', verificada: false });
 const showProductDetails = ref(false);
 const selectedProductDetails = ref(null);
 const favoriteIds = ref(readStoredIds('botica-pos-favorite-product-ids'));
@@ -80,18 +80,16 @@ function addProductFromDetails(product) { closeProductDetails(); addProduct(prod
 const sellableStock = (product) => Number(product.stock_disponible || 0);
 function addProduct(product) {
   if (sellableStock(product) <= 0) return notify('Este producto no tiene unidades vigentes disponibles para vender.', 'error');
-  if (product.requiere_receta) {
+  if (requiresPrescription(product)) {
     selectedPrescriptionProduct.value = product;
-    prescription.value = { nombre_medico: '', cmp_medico: '' };
+    if (!prescription.value.prescriptor_nombre) prescription.value = { prescriptor_nombre: '', prescriptor_colegiatura: '', fecha_emision: '', tipo: 'fisica', referencia: '', verificada: false };
     showPrescription.value = true;
     return;
   }
   insertIntoCart(product);
 }
 function confirmPrescription() {
-  if (!prescription.value.nombre_medico.trim() || !prescription.value.cmp_medico.trim()) {
-    return notify('Completa el nombre y la colegiatura del médico.', 'error');
-  }
+  if (!prescription.value.prescriptor_nombre.trim() || !prescription.value.prescriptor_colegiatura.trim() || !prescription.value.fecha_emision || !prescription.value.verificada) return notify('Completa y confirma la verificación de la receta.', 'error');
   insertIntoCart(selectedPrescriptionProduct.value, prescription.value);
   closePrescription();
 }
@@ -99,6 +97,7 @@ function closePrescription() {
   showPrescription.value = false;
   selectedPrescriptionProduct.value = null;
 }
+const requiresPrescription = (product) => (product.condicion_venta || (product.requiere_receta ? 'con_receta' : 'libre')) !== 'libre';
 function insertIntoCart(product, recipe = null) {
   rememberProduct(product);
   const existing = cart.value.find((item) => item.producto_id === product.id);
@@ -110,8 +109,7 @@ function insertIntoCart(product, recipe = null) {
   }
   cart.value.push({
     producto_id: product.id, nombre: product.nombre, precio_unitario: Number(product.precio_venta),
-    cantidad: 1, stock_max: sellableStock(product), requiere_receta: Boolean(product.requiere_receta),
-    nombre_medico: recipe?.nombre_medico || null, cmp_medico: recipe?.cmp_medico || null,
+    cantidad: 1, stock_max: sellableStock(product), requiere_receta: requiresPrescription(product),
   });
 }
 function updateQuantity(item, quantity) {
@@ -163,6 +161,9 @@ async function processSale() {
   processing.value = true;
   try {
     const hasCustomer = Boolean(customer.value && documentNumber.value.trim());
+    const hasPrescriptionProduct = cart.value.some((item) => item.requiere_receta);
+    if (hasPrescriptionProduct && !hasCustomer) return notify('Para dispensar productos con receta, primero identifica al paciente mediante su documento.', 'error');
+    if (hasPrescriptionProduct && !prescription.value.verificada) return notify('Debes registrar y verificar la receta médica.', 'error');
     const payload = {
       cliente_id: hasCustomer ? customer.value.id : null,
       cliente_datos: hasCustomer ? {
@@ -171,6 +172,7 @@ async function processSale() {
         tipo_documento: documentNumber.value.trim().length === 11 ? 'RUC' : 'DNI',
       } : null,
       metodo_pago: paymentMethod.value,
+      receta: hasPrescriptionProduct ? prescription.value : null,
       detalles: cart.value.map((item) => ({ producto_id: item.producto_id, cantidad: item.cantidad, nombre_medico: item.nombre_medico, cmp_medico: item.cmp_medico })),
     };
     const { data } = await api.post('/ventas', payload);
