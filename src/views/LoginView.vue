@@ -12,6 +12,7 @@
         <div class="mb-8 lg:hidden"><div class="flex items-center gap-3"><span class="grid h-10 w-10 place-items-center rounded-xl bg-cyan-700 font-black text-white">B</span><strong class="text-slate-900">Botica Operations</strong></div></div>
         <div class="app-card p-6 sm:p-8">
           <div class="mb-7"><p class="text-sm font-medium text-cyan-700">Bienvenido</p><h2 class="mt-1 text-2xl font-bold tracking-tight text-slate-900">Ingresa a tu cuenta</h2><p class="mt-2 text-sm text-slate-500">Usa tus credenciales de operador o administrador.</p></div>
+          <p v-if="sessionExpired" class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800" role="status">Tu sesión terminó por seguridad. Ingresa nuevamente para continuar.</p>
           <form class="space-y-5" @submit.prevent="handleLogin">
             <div><label class="field-label" for="email">Correo electrónico</label><div class="relative"><Mail class="pointer-events-none absolute left-3 top-3 text-slate-400" :size="18" /><input id="email" v-model.trim="email" class="field-control pl-10" type="email" autocomplete="email" required placeholder="nombre@botica.com" /></div></div>
             <div><label class="field-label" for="password">Contraseña</label><div class="relative"><LockKeyhole class="pointer-events-none absolute left-3 top-3 text-slate-400" :size="18" /><input id="password" v-model="password" class="field-control pl-10 pr-11" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" required placeholder="Ingresa tu contraseña" /><button class="absolute right-2 top-2 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700" type="button" :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'" @click="showPassword = !showPassword"><EyeOff v-if="showPassword" :size="18" /><Eye v-else :size="18" /></button></div></div>
@@ -25,13 +26,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Eye, EyeOff, LoaderCircle, LockKeyhole, Mail } from 'lucide-vue-next';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import api from '../api/axios';
 import { useAuth } from '../composables/useAuth';
 
 const router = useRouter();
+const route = useRoute();
 const { setSession } = useAuth();
 const email = ref('');
 const password = ref('');
@@ -39,6 +41,7 @@ const error = ref('');
 const loading = ref(false);
 const showPassword = ref(false);
 const year = new Date().getFullYear();
+const sessionExpired = computed(() => route.query.notice === 'session-expired');
 
 async function handleLogin() {
   loading.value = true;
