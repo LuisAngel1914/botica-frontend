@@ -2,8 +2,14 @@
   <div class="space-y-6">
     <PageHeader eyebrow="Inteligencia comercial" title="Panel de negocio" description="Ventas, abastecimiento y alertas prioritarias en un solo lugar.">
       <template #actions>
-        <button class="btn btn-secondary" :disabled="loading" @click="loadDashboard"><RefreshCw :size="16" :class="{ 'animate-spin': loading }" />{{ loading ? 'Actualizando…' : 'Actualizar' }}</button>
-        <button class="btn bg-slate-950 text-white hover:bg-slate-800" @click="printReport">Imprimir resumen</button>
+        <div class="flex flex-wrap items-end justify-end gap-2">
+          <label class="text-left"><span class="field-label">Desde</span><input v-model="reportFrom" class="field-control !w-36 !py-2 text-xs" type="date" /></label>
+          <label class="text-left"><span class="field-label">Hasta</span><input v-model="reportTo" class="field-control !w-36 !py-2 text-xs" type="date" /></label>
+          <button class="btn btn-secondary !px-3 !py-2 text-xs" :disabled="exporting" @click="downloadExport('excel')">{{ exporting === 'excel' ? 'Generando…' : 'CSV neto' }}</button>
+          <button class="btn btn-secondary !px-3 !py-2 text-xs" :disabled="exporting" @click="downloadExport('pdf')">{{ exporting === 'pdf' ? 'Generando…' : 'PDF neto' }}</button>
+          <button class="btn btn-secondary" :disabled="loading" @click="loadDashboard"><RefreshCw :size="16" :class="{ 'animate-spin': loading }" />{{ loading ? 'Actualizando…' : 'Actualizar' }}</button>
+          <button class="btn bg-slate-950 text-white hover:bg-slate-800" @click="printReport">Imprimir resumen</button>
+        </div>
       </template>
     </PageHeader>
 
@@ -27,7 +33,7 @@
 
     <section class="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
       <article class="app-card p-5"><p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Rentabilidad del mes</p><h2 class="mt-1 text-lg font-bold text-slate-900">Margen con trazabilidad</h2><div class="mt-5 grid gap-3 sm:grid-cols-2"><div class="rounded-xl bg-emerald-50 p-4"><p class="text-xs font-semibold text-emerald-800">Confirmado</p><p class="mt-1 text-2xl font-black text-emerald-900">S/ {{ money(dashboard.rentabilidad?.margen_confirmado) }}</p><p class="mt-1 text-xs text-emerald-700">Costo capturado al vender.</p></div><div class="rounded-xl bg-amber-50 p-4"><p class="text-xs font-semibold text-amber-800">Estimado histórico</p><p class="mt-1 text-2xl font-black text-amber-900">S/ {{ money(dashboard.rentabilidad?.margen_estimado_historico) }}</p><p class="mt-1 text-xs text-amber-700">Usa costo actual para ventas antiguas.</p></div></div></article>
-      <article class="app-card overflow-hidden"><div class="border-b border-slate-100 p-5"><p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Rentabilidad</p><h2 class="mt-1 text-lg font-bold text-slate-900">Productos con mejor margen</h2></div><div v-if="dashboard.productos_rentables?.length" class="divide-y divide-slate-100"><div v-for="product in dashboard.productos_rentables" :key="product.id" class="flex items-center justify-between gap-3 p-4"><div class="min-w-0"><p class="truncate font-bold text-slate-800">{{ product.nombre }}</p><p class="text-xs text-slate-500">{{ product.unidades }} un. · {{ product.lineas_estimadas ? 'Incluye histórico estimado' : 'Margen confirmado' }}</p></div><strong class="shrink-0 text-emerald-700">S/ {{ money(Number(product.margen_confirmado) + Number(product.margen_estimado_historico)) }}</strong></div></div><EmptyState v-else icon="trending" title="Aún no hay margen calculable" description="Las próximas ventas registrarán su costo unitario." /></article>
+      <article class="app-card overflow-hidden"><div class="border-b border-slate-100 p-5"><p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Rentabilidad</p><h2 class="mt-1 text-lg font-bold text-slate-900">Productos con mejor margen</h2></div><div v-if="dashboard.productos_rentables?.length" class="divide-y divide-slate-100"><div v-for="product in dashboard.productos_rentables" :key="product.id" class="flex items-center justify-between gap-3 p-4"><div class="min-w-0"><p class="truncate font-bold text-slate-800">{{ product.nombre }}</p><p class="text-xs text-slate-500">{{ product.unidades }} un. netas · {{ product.lineas_estimadas ? 'Incluye histórico estimado' : 'Margen confirmado' }}</p></div><strong class="shrink-0 text-emerald-700">S/ {{ money(Number(product.margen_confirmado) + Number(product.margen_estimado_historico)) }}</strong></div></div><EmptyState v-else icon="trending" title="Aún no hay margen calculable" description="Las próximas ventas registrarán su costo unitario." /></article>
     </section>
 
     <section class="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.65fr)]">
@@ -41,7 +47,7 @@
               <img v-if="product.imagen_url" :src="product.imagen_url" :alt="product.nombre" class="h-full w-full object-cover" @error="$event.target.remove()" />
               <span v-else>{{ initials(product.nombre) }}</span>
             </div>
-            <div class="min-w-0 flex-1"><p class="truncate text-sm font-bold text-slate-800">{{ product.nombre }}</p><p class="mt-0.5 text-xs text-slate-500">{{ product.unidades }} unidades vendidas</p></div>
+            <div class="min-w-0 flex-1"><p class="truncate text-sm font-bold text-slate-800">{{ product.nombre }}</p><p class="mt-0.5 text-xs text-slate-500">{{ product.unidades }} unidades netas</p></div>
             <p class="shrink-0 text-sm font-black text-cyan-700">S/ {{ money(product.monto) }}</p>
           </li>
         </ol>
@@ -89,6 +95,9 @@ import PageHeader from '../components/ui/PageHeader.vue';
 const router = useRouter();
 const loading = ref(false);
 const error = ref('');
+const reportFrom = ref('');
+const reportTo = ref('');
+const exporting = ref('');
 const dashboard = ref({
   resumen_caja: { ventas_hoy_monto: 0, ventas_hoy_cantidad: 0, ventas_mes_monto: 0, devoluciones_hoy: 0, devoluciones_mes: 0, total_clientes: 0 },
   alertas_inventario: { total_stock_critico: 0, total_por_vencer: 0, total_vencidos: 0 },
@@ -133,6 +142,28 @@ const formatDate = (value) => new Date(value + 'T00:00:00').toLocaleDateString('
 const formatDateTime = (value) => value ? new Date(value).toLocaleString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
 const paymentWidth = (amount) => totalPayments.value ? Math.max(4, (Number(amount) / totalPayments.value) * 100) + '%' : '0%';
 const printReport = () => window.print();
+
+async function downloadExport(format) {
+  exporting.value = format;
+  try {
+    const params = {};
+    if (reportFrom.value) params.fecha_inicio = reportFrom.value;
+    if (reportTo.value) params.fecha_fin = reportTo.value;
+    const response = await api.get('/reportes/' + format, { params, responseType: 'blob' });
+    const type = format === 'pdf' ? 'application/pdf' : 'text/csv';
+    const url = URL.createObjectURL(new Blob([response.data], { type }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'reporte-ventas-neto.' + (format === 'pdf' ? 'pdf' : 'csv');
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    error.value = 'No se pudo generar la exportación. Inténtalo nuevamente.';
+  } finally {
+    exporting.value = '';
+  }
+}
+
 const goToInventory = (productId, action = 'review', lotId = null) => router.push({ name: 'inventario', query: { producto: productId, action, ...(lotId ? { lote: lotId } : {}) } });
 
 async function loadDashboard() {
