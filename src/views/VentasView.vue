@@ -5,10 +5,10 @@
     <InlineNotice :notice="notice" @dismiss="notice = null" />
 
     <div class="app-card flex flex-col gap-3 p-4 lg:flex-row lg:items-end">
-      <label class="flex-1"><span class="field-label">Buscar</span><input v-model="search" class="field-control" placeholder="Cliente, documento o número de venta" /></label>
+      <label class="flex-1"><span class="field-label">Buscar</span><input v-model="search" class="field-control" placeholder="Cliente, documento o número de venta" @keyup.enter="loadSales(1)" /></label>
       <label><span class="field-label">Desde</span><input v-model="from" class="field-control" type="date" /></label>
       <label><span class="field-label">Hasta</span><input v-model="to" class="field-control" type="date" /></label>
-      <button class="btn btn-secondary" :disabled="loading" @click="loadSales">Aplicar filtros</button>
+      <button class="btn btn-secondary" :disabled="loading" @click="loadSales(1)">Aplicar filtros</button>
     </div>
 
     <section class="app-card overflow-hidden">
@@ -30,6 +30,15 @@
       </div>
       <div v-else class="grid min-h-64 place-items-center p-6 text-center text-sm text-slate-500">No se encontraron ventas en el período indicado.</div>
     </section>
+
+    <nav v-if="pagination.lastPage > 1" class="flex flex-col gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between" aria-label="Paginación de ventas">
+      <p>Mostrando {{ pagination.from }}–{{ pagination.to }} de {{ pagination.total }} ventas</p>
+      <div class="flex items-center gap-2">
+        <button class="btn btn-secondary !px-3 !py-2 text-xs" :disabled="loading || pagination.currentPage <= 1" @click="loadSales(pagination.currentPage - 1)">Anterior</button>
+        <span class="min-w-24 text-center text-xs font-semibold">Página {{ pagination.currentPage }} de {{ pagination.lastPage }}</span>
+        <button class="btn btn-secondary !px-3 !py-2 text-xs" :disabled="loading || pagination.currentPage >= pagination.lastPage" @click="loadSales(pagination.currentPage + 1)">Siguiente</button>
+      </div>
+    </nav>
 
     <div v-if="selectedSale" class="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
       <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl"><header class="flex items-center justify-between bg-slate-950 p-5 text-white"><div><p class="text-xs font-semibold uppercase tracking-wider text-cyan-300">Comprobante</p><h2 class="font-bold">Venta #{{ selectedSale.id }}</h2></div><button class="text-slate-300 hover:text-white" @click="selectedSale = null">✕</button></header>
@@ -58,6 +67,7 @@ import PageHeader from '../components/ui/PageHeader.vue';
 
 const { isAdmin } = useAuth();
 const sales = ref([]), loading = ref(false), search = ref(''), from = ref(''), to = ref('');
+const pagination = ref({ currentPage: 1, lastPage: 1, total: 0, from: 0, to: 0 });
 const selectedSale = ref(null), saleToCancel = ref(null), saleToReturn = ref(null), cancellationReason = ref(''), returnReason = ref(''), returnQuantities = ref({}), cancelling = ref(false), returning = ref(false), cancelError = ref(''), returnError = ref(''), notice = ref(null);
 const money = (value) => Number(value || 0).toFixed(2);
 const formatDate = (value) => value ? new Date(value).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
@@ -65,10 +75,31 @@ const clientName = (sale) => sale.cliente?.nombre_razon_social || sale.cliente?.
 const clientDocument = (sale) => sale.cliente?.numero_documento || sale.cliente_datos?.numero_documento || '';
 const localTotal = (sale) => (sale.detalles || []).reduce((sum, item) => sum + Number(item.cantidad) * Number(item.precio_unitario || item.precio), 0);
 const paymentClass = (method) => method === 'Efectivo' ? 'bg-emerald-50 text-emerald-700' : method === 'Yape' ? 'bg-violet-50 text-violet-700' : 'bg-cyan-50 text-cyan-700';
-const filteredSales = computed(() => { const query = search.value.trim().toLowerCase(); if (!query) return sales.value; return sales.value.filter((sale) => [String(sale.id), clientName(sale), clientDocument(sale)].some((value) => value.toLowerCase().includes(query))); });
+const filteredSales = computed(() => sales.value);
 const returnTotal = computed(() => (saleToReturn.value?.detalles || []).reduce((total, item) => total + Number(returnQuantities.value[item.id] || 0) * Number(item.precio_unitario || item.precio || 0), 0));
 function show(message, type = 'success') { notice.value = { message, type }; }
-async function loadSales() { loading.value = true; try { const params = {}; if (from.value) params.fecha_inicio = from.value; if (to.value) params.fecha_fin = to.value; const { data } = await api.get('/ventas', { params }); sales.value = data.data || data; } catch { show('No se pudo cargar el historial de ventas.', 'error'); } finally { loading.value = false; } }
+async function loadSales(page = 1) {
+  loading.value = true;
+  try {
+    const params = { page, per_page: 15 };
+    if (search.value.trim()) params.search = search.value.trim();
+    if (from.value) params.fecha_inicio = from.value;
+    if (to.value) params.fecha_fin = to.value;
+    const { data } = await api.get('/ventas', { params });
+    sales.value = Array.isArray(data.data) ? data.data : data;
+    pagination.value = {
+      currentPage: data.current_page || 1,
+      lastPage: data.last_page || 1,
+      total: data.total || sales.value.length,
+      from: data.from || 0,
+      to: data.to || 0,
+    };
+  } catch {
+    show('No se pudo cargar el historial de ventas.', 'error');
+  } finally {
+    loading.value = false;
+  }
+}
 function openDetail(sale) { selectedSale.value = sale; }
 function returnedQuantity(item) { return (item.devoluciones || []).reduce((total, value) => total + Number(value.cantidad || 0), 0); }
 function returnableQuantity(item) { return Math.max(0, Number(item.cantidad || 0) - returnedQuantity(item)); }
