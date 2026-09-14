@@ -30,6 +30,7 @@ const cart = ref([]);
 const paymentMethod = ref('Efectivo');
 const loadingProducts = ref(false);
 const processing = ref(false);
+const saleAttemptKey = ref(null);
 const notice = ref(null);
 const showPrescription = ref(false);
 const selectedPrescriptionProduct = ref(null);
@@ -47,7 +48,15 @@ const filteredProducts = computed(() => {
 const recentProducts = computed(() => recentIds.value.map((id) => products.value.find((product) => product.id === id)).filter(Boolean));
 const saleTotal = computed(() => cart.value.reduce((total, item) => total + item.cantidad * item.precio_unitario, 0));
 
-watch(documentNumber, (value) => { if (!value?.trim()) customer.value = null; });
+watch(documentNumber, (value) => {
+  if (!value?.trim()) customer.value = null;
+  resetSaleAttempt();
+});
+watch(paymentMethod, resetSaleAttempt);
+
+function resetSaleAttempt() {
+  saleAttemptKey.value = null;
+}
 
 function readStoredIds(key) { try { const value = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } }
 function storeIds(key, ids) { localStorage.setItem(key, JSON.stringify(ids)); }
@@ -99,6 +108,7 @@ function closePrescription() {
 }
 const requiresPrescription = (product) => (product.condicion_venta || (product.requiere_receta ? 'con_receta' : 'libre')) !== 'libre';
 function insertIntoCart(product, recipe = null) {
+  resetSaleAttempt();
   rememberProduct(product);
   const existing = cart.value.find((item) => item.producto_id === product.id);
   if (existing) {
@@ -113,14 +123,16 @@ function insertIntoCart(product, recipe = null) {
   });
 }
 function updateQuantity(item, quantity) {
+  resetSaleAttempt();
   if (!Number.isFinite(quantity) || quantity < 1) item.cantidad = 1;
   else if (quantity > item.stock_max) {
     item.cantidad = item.stock_max;
     notify('La cantidad fue ajustada al stock disponible.', 'error');
   } else item.cantidad = quantity;
 }
-function removeFromCart(index) { cart.value.splice(index, 1); }
+function removeFromCart(index) { resetSaleAttempt(); cart.value.splice(index, 1); }
 async function findCustomer() {
+  resetSaleAttempt();
   const document = documentNumber.value.trim();
   if (!document) return;
   try {
@@ -164,7 +176,10 @@ async function processSale() {
     const hasPrescriptionProduct = cart.value.some((item) => item.requiere_receta);
     if (hasPrescriptionProduct && !hasCustomer) return notify('Para dispensar productos con receta, primero identifica al paciente mediante su documento.', 'error');
     if (hasPrescriptionProduct && !prescription.value.verificada) return notify('Debes registrar y verificar la receta médica.', 'error');
+    const idempotencyKey = saleAttemptKey.value || window.crypto.randomUUID();
+    saleAttemptKey.value = idempotencyKey;
     const payload = {
+      idempotency_key: idempotencyKey,
       cliente_id: hasCustomer ? customer.value.id : null,
       cliente_datos: hasCustomer ? {
         numero_documento: documentNumber.value.trim(),
@@ -178,10 +193,11 @@ async function processSale() {
     const { data } = await api.post('/ventas', payload);
     const saleId = data.venta_id || data.id || data.data?.id;
     cart.value = [];
+    resetSaleAttempt();
     customer.value = null;
     documentNumber.value = '';
     await loadProducts();
-    notify('Venta registrada correctamente.');
+    notify(data.idempotent ? 'La venta ya estaba registrada; se recuperó la operación original.' : 'Venta registrada correctamente.');
     if (saleId) await downloadTicket(saleId);
   } catch (error) {
     notify(error.response?.data?.message || 'No fue posible registrar la venta.', 'error');
