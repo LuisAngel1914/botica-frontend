@@ -12,12 +12,28 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+let isRedirectingToLogin = false;
+
+function isLoginRequest(config) {
+  return String(config?.url || '').replace(/^\/+/, '').startsWith('login');
+}
+
+function redirectToExpiredSessionNotice() {
+  if (isRedirectingToLogin || window.location.pathname === '/') return;
+
+  isRedirectingToLogin = true;
+  const loginUrl = new URL('/', window.location.origin);
+  loginUrl.searchParams.set('notice', 'session-expired');
+  window.location.replace(loginUrl);
+}
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !isLoginRequest(error.config)) {
       localStorage.removeItem('token');
       localStorage.removeItem('usuario');
+      redirectToExpiredSessionNotice();
     }
     return Promise.reject(error);
   },
