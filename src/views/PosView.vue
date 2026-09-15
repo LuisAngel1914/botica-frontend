@@ -1,7 +1,14 @@
 <template>
-  <div class="space-y-4">
+  <div class="space-y-5 sm:space-y-6">
+    <section class="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white px-5 py-5 shadow-sm sm:px-7 sm:py-6">
+      <div class="absolute -right-16 -top-24 h-56 w-56 rounded-full bg-cyan-100/70 blur-3xl" />
+      <div class="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div><p class="section-kicker">Terminal de venta</p><h2 class="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">Vende con precisión y rapidez.</h2><p class="mt-2 max-w-xl text-sm leading-6 text-slate-500">Busca un producto, agrégalo al carrito y finaliza la operación sin perder trazabilidad.</p></div>
+        <div class="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3"><span class="relative flex h-2.5 w-2.5"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" /><span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" /></span><div><p class="text-xs font-bold text-emerald-900">Terminal lista</p><p class="text-[11px] text-emerald-700">Catálogo conectado</p></div></div>
+      </div>
+    </section>
     <div v-if="notice" class="flex items-start justify-between gap-3 rounded-2xl border p-4 text-sm" :class="notice.type === 'error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800'" role="status"><span>{{ notice.message }}</span><button class="rounded-lg px-2 py-1 font-bold hover:bg-black/5" aria-label="Cerrar aviso" @click="notice = null">×</button></div>
-    <div class="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(22rem,0.8fr)]">
+    <div class="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(23rem,0.78fr)]">
       <ProductCatalog v-model:query="query" :products="filteredProducts" :favorite-ids="favoriteIds" :recent-products="recentProducts" :loading="loadingProducts" @search="searchProduct" @select="addProduct" @details="openProductDetails" @toggle-favorite="toggleFavorite" />
       <SaleCart v-model:document-number="documentNumber" v-model:payment-method="paymentMethod" :cart="cart" :customer="customer" :processing="processing" :total="saleTotal" @find-customer="findCustomer" @remove="removeFromCart" @quantity="updateQuantity" @checkout="checkCashRegisterAndSell" />
     </div>
