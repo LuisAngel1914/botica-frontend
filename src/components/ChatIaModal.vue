@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed bottom-5 right-5 z-40">
+  <div class="fixed bottom-20 right-5 z-40 lg:bottom-5">
     <button class="grid h-13 w-13 place-items-center rounded-2xl bg-slate-950 text-white shadow-xl transition hover:-translate-y-0.5 hover:bg-cyan-700 focus-visible:outline-cyan-400" :aria-expanded="open" aria-controls="assistant-panel" @click="open = !open">
       <MessageCircle v-if="!open" :size="22" /><X v-else :size="22" /><span class="sr-only">{{ open ? 'Cerrar asistente' : 'Abrir asistente' }}</span>
     </button>
@@ -30,16 +30,27 @@
 </template>
 
 <script setup>
-import { nextTick, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { LoaderCircle, MessageCircle, Package, Send, Sparkles, X } from 'lucide-vue-next';
 import api from '../api/axios';
 
 const open = ref(false);
+const props = defineProps({ context: { type: String, default: 'pos' } });
 const loading = ref(false);
 const draft = ref('');
 const chatBox = ref(null);
 const messages = ref([{ role: 'assistant', text: 'Hola. Puedo ayudarte con productos, caja, ventas, inventario, clientes, reportes y usuarios, según tus permisos. No atiendo consultas ajenas a Botica L y L ni ejecuto cambios desde este chat.' }]);
-const suggestions = ['Estado de caja', 'Ventas de hoy', 'Alertas de inventario'];
+const suggestions = computed(() => ({
+  pos: ['Precio de paracetamol', 'Stock de ibuprofeno', 'Estado de caja'],
+  caja: ['Estado de caja', 'Ventas de hoy', 'Efectivo registrado'],
+  ventas: ['Ventas de hoy', 'Reporte de hoy', 'Estado de caja'],
+  clientes: ['Consultar cliente por DNI', 'Ventas de hoy', 'Productos disponibles'],
+  compras: ['Alertas de inventario', 'Lotes por vencer', 'Productos disponibles'],
+  inventario: ['Alertas de inventario', 'Lotes vencidos', 'Stock crítico'],
+  reportes: ['Reporte de hoy', 'Ventas de hoy', 'Alertas de inventario'],
+  actividad: ['Ventas de hoy', 'Estado de caja', 'Alertas de inventario'],
+  usuarios: ['Usuarios activos', 'Reporte de hoy', 'Estado de caja'],
+}[props.context] || ['Estado de caja', 'Ventas de hoy', 'Productos disponibles']));
 
 async function scrollToBottom() { await nextTick(); if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight; }
 const money = (value) => Number(value || 0).toFixed(2);
