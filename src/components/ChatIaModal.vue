@@ -4,7 +4,7 @@
       <MessageCircle v-if="!open" :size="22" /><X v-else :size="22" /><span class="sr-only">{{ open ? 'Cerrar asistente' : 'Abrir asistente' }}</span>
     </button>
     <section v-if="open" id="assistant-panel" class="absolute bottom-16 right-0 flex h-[min(36rem,calc(100vh-7rem))] w-[calc(100vw-2.5rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-      <header class="flex items-center gap-3 bg-slate-950 p-4 text-white"><span class="grid h-9 w-9 place-items-center rounded-xl bg-cyan-400 text-slate-950"><Sparkles :size="18" /></span><div><h2 class="text-sm font-semibold">Asistente de botica</h2><p class="text-xs text-slate-400">Catálogo, stock vigente y precios</p></div></header>
+      <header class="flex items-center gap-3 bg-slate-950 p-4 text-white"><span class="grid h-9 w-9 place-items-center rounded-xl bg-cyan-400 text-slate-950"><Sparkles :size="18" /></span><div><h2 class="text-sm font-semibold">Asistente de Botica L y L</h2><p class="text-xs text-slate-400">Consultas operativas según tu acceso</p></div></header>
       <div ref="chatBox" class="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4" aria-live="polite">
         <div v-for="(message, index) in messages" :key="index" class="flex" :class="message.role === 'user' ? 'justify-end' : 'justify-start'">
           <div class="max-w-[92%]">
@@ -24,7 +24,7 @@
         <div v-if="messages.length === 1 && !loading" class="flex flex-wrap gap-2 pt-1"><button v-for="suggestion in suggestions" :key="suggestion" class="rounded-full border border-cyan-200 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-800 transition hover:bg-cyan-50" @click="sendSuggestion(suggestion)">{{ suggestion }}</button></div>
         <div v-if="loading" class="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle :size="16" class="animate-spin" /> Consultando…</div>
       </div>
-      <div class="border-t border-slate-200 bg-white p-3"><p class="mb-2 text-[11px] leading-4 text-slate-500">No brinda diagnósticos, dosis ni recomendaciones terapéuticas.</p><form class="flex gap-2" @submit.prevent="sendMessage"><input v-model="draft" class="field-control min-w-0 py-2" :disabled="loading" placeholder="Ej. Precio de paracetamol" aria-label="Mensaje al asistente" /><button class="btn btn-primary px-3 py-2" :disabled="loading || !draft.trim()" aria-label="Enviar mensaje"><Send :size="17" /></button></form></div>
+      <div class="border-t border-slate-200 bg-white p-3"><p class="mb-2 text-[11px] leading-4 text-slate-500">Solo responde sobre Botica L y L. No ejecuta cambios, diagnósticos, dosis ni recomendaciones terapéuticas.</p><form class="flex gap-2" @submit.prevent="sendMessage"><input v-model="draft" class="field-control min-w-0 py-2" :disabled="loading" placeholder="Ej. Estado de caja" aria-label="Mensaje al asistente" /><button class="btn btn-primary px-3 py-2" :disabled="loading || !draft.trim()" aria-label="Enviar mensaje"><Send :size="17" /></button></form></div>
     </section>
   </div>
 </template>
@@ -38,8 +38,8 @@ const open = ref(false);
 const loading = ref(false);
 const draft = ref('');
 const chatBox = ref(null);
-const messages = ref([{ role: 'assistant', text: 'Hola. Puedo ayudarte a consultar productos, stock vigente, precios, presentación, principio activo y condición de venta.' }]);
-const suggestions = ['Productos disponibles', 'Precio de paracetamol', 'Stock de ibuprofeno'];
+const messages = ref([{ role: 'assistant', text: 'Hola. Puedo ayudarte con productos, caja, ventas, inventario, clientes, reportes y usuarios, según tus permisos. No atiendo consultas ajenas a Botica L y L ni ejecuto cambios desde este chat.' }]);
+const suggestions = ['Estado de caja', 'Ventas de hoy', 'Alertas de inventario'];
 
 async function scrollToBottom() { await nextTick(); if (chatBox.value) chatBox.value.scrollTop = chatBox.value.scrollHeight; }
 const money = (value) => Number(value || 0).toFixed(2);
