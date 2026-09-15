@@ -7,7 +7,6 @@
     </div>
     <ProductDetailsDialog :open="showProductDetails" :product="selectedProductDetails" @close="closeProductDetails" @select="addProductFromDetails" />
     <PrescriptionDialog v-model:data="prescription" :open="showPrescription" :product="selectedPrescriptionProduct" @close="closePrescription" @confirm="confirmPrescription" />
-    <ChatIaModal />
   </div>
 </template>
 
@@ -15,7 +14,6 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../api/axios';
-import ChatIaModal from '../components/ChatIaModal.vue';
 import PrescriptionDialog from '../components/pos/PrescriptionDialog.vue';
 import ProductCatalog from '../components/pos/ProductCatalog.vue';
 import ProductDetailsDialog from '../components/pos/ProductDetailsDialog.vue';
