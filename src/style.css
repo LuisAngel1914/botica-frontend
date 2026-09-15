@@ -3,25 +3,29 @@
 @theme {
   --color-brand-50: #ecfeff;
   --color-brand-100: #cffafe;
-  --color-brand-500: #0891b2;
-  --color-brand-600: #0e7490;
-  --color-ink-950: #0f172a;
+  --color-brand-400: #22d3ee;
+  --color-brand-500: #06b6d4;
+  --color-brand-600: #0891b2;
+  --color-brand-700: #0e7490;
+  --color-ink-950: #020617;
 }
 
 @layer base {
   * { @apply border-slate-200; }
   html { color-scheme: light; }
-  body { @apply m-0 min-w-80 bg-slate-50 font-sans text-slate-900 antialiased; }
+  body { @apply m-0 min-w-80 bg-slate-50 font-sans text-slate-900 antialiased; background-image: radial-gradient(circle at 75% -10%, rgba(34,211,238,.10), transparent 28rem); }
   button, input, select, textarea { font: inherit; }
   button:not(:disabled), [role="button"]:not([aria-disabled="true"]) { @apply cursor-pointer; }
   :focus-visible { @apply outline-2 outline-offset-2 outline-cyan-600; }
 }
 
 @layer components {
-  .app-card { @apply rounded-2xl border border-slate-200 bg-white shadow-sm; }
+  .app-card { @apply rounded-2xl border border-slate-200/80 bg-white shadow-sm; box-shadow: 0 1px 2px rgba(15,23,42,.03), 0 12px 30px rgba(15,23,42,.035); }
   .field-label { @apply mb-1.5 block text-xs font-semibold text-slate-600; }
   .field-control { @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-xs transition placeholder:text-slate-400 focus:border-cyan-600 focus:outline-none focus:ring-4 focus:ring-cyan-100 disabled:bg-slate-100; }
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50; }
-  .btn-primary { @apply bg-cyan-700 text-white shadow-sm hover:bg-cyan-800 active:bg-cyan-900; }
-  .btn-secondary { @apply bg-slate-100 text-slate-700 hover:bg-slate-200; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply bg-cyan-700 text-white shadow-sm hover:bg-cyan-800 active:scale-[.98] active:bg-cyan-900; }
+  .btn-secondary { @apply border border-slate-200 bg-white text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 active:scale-[.98]; }
+  .section-kicker { @apply text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-700; }
+  .metric-card { @apply relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md; box-shadow: 0 1px 2px rgba(15,23,42,.03), 0 12px 30px rgba(15,23,42,.035); }
 }
