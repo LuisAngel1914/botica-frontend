@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <PageHeader eyebrow="Inteligencia comercial" title="Panel de negocio" description="Ventas, abastecimiento y alertas prioritarias en un solo lugar.">
+    <PageHeader eyebrow="Vista ejecutiva" title="Tu operación, en un vistazo" description="Ventas, caja e inventario priorizados para tomar decisiones con rapidez.">
       <template #actions>
         <div class="flex flex-wrap items-end justify-end gap-2">
           <label class="text-left"><span class="field-label">Desde</span><input v-model="reportFrom" class="field-control !w-36 !py-2 text-xs" type="date" /></label>
@@ -16,7 +16,7 @@
     <div v-if="error" class="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert"><AlertTriangle :size="20" /><span>{{ error }}</span></div>
 
     <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <article v-for="metric in metrics" :key="metric.label" class="app-card p-5">
+      <article v-for="metric in metrics" :key="metric.label" class="metric-card">
         <div class="flex items-start justify-between gap-3">
           <div><p class="text-xs font-semibold uppercase tracking-wider text-slate-500">{{ metric.label }}</p><p class="mt-2 text-2xl font-black tracking-tight text-slate-900">{{ metric.value }}</p><p class="mt-1 text-xs text-slate-500">{{ metric.detail }}</p></div>
           <span class="grid h-10 w-10 place-items-center rounded-xl" :class="metric.iconClass"><component :is="metric.icon" :size="20" /></span>

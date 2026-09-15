@@ -49,7 +49,7 @@ async function handleLogin() {
   try {
     const { data } = await api.post('/login', { email: email.value, password: password.value });
     setSession({ token: data.access_token || data.token, user: data.user });
-    await router.replace({ name: 'pos' });
+    await router.replace({ name: data.user?.role === 'admin' ? 'dashboard' : 'pos' });
   } catch (err) {
     error.value = err.response?.data?.message || 'No pudimos iniciar sesión. Verifica tus credenciales e inténtalo de nuevo.';
   } finally {
