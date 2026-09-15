@@ -43,7 +43,9 @@ const recentIds = ref(readStoredIds('botica-pos-recent-product-ids'));
 const filteredProducts = computed(() => {
   const term = query.value.trim().toLowerCase();
   if (!term) return products.value;
-  return products.value.filter((product) => product.nombre?.toLowerCase().includes(term) || product.codigo_barras?.toLowerCase().includes(term));
+  return products.value.filter((product) => [product.nombre, product.codigo_barras, product.principio_activo]
+    .filter(Boolean)
+    .some((value) => value.toLowerCase().includes(term)));
 });
 const recentProducts = computed(() => recentIds.value.map((id) => products.value.find((product) => product.id === id)).filter(Boolean));
 const saleTotal = computed(() => cart.value.reduce((total, item) => total + item.cantidad * item.precio_unitario, 0));
@@ -77,10 +79,31 @@ async function loadProducts() {
     loadingProducts.value = false;
   }
 }
-function searchProduct() {
+async function searchProduct() {
+  const term = query.value.trim();
+  if (!term) return;
+
+  const exactMatch = products.value.find((product) => product.codigo_barras?.toLowerCase() === term.toLowerCase());
+  if (exactMatch) {
+    addProduct(exactMatch);
+    query.value = '';
+    return;
+  }
+
   if (filteredProducts.value.length === 1) {
     addProduct(filteredProducts.value[0]);
     query.value = '';
+    return;
+  }
+
+  try {
+    const { data } = await api.get('/productos/buscar/' + encodeURIComponent(term));
+    const product = data.data || data;
+    if (!products.value.some((item) => item.id === product.id)) products.value.push(product);
+    addProduct(product);
+    query.value = '';
+  } catch {
+    notify('No encontramos un producto con ese código.', 'error');
   }
 }
 function openProductDetails(product) { selectedProductDetails.value = product; showProductDetails.value = true; }
