@@ -25,6 +25,10 @@
                 <p class="border-t border-slate-100 bg-slate-50 px-3 py-2 text-[11px] font-semibold text-slate-600">{{ conditionLabel(product.condicion_venta) }}</p>
               </article>
             </div>
+            <div v-if="message.interactionId" class="mt-2 flex items-center gap-2 text-[11px] text-slate-500">
+              <span v-if="message.feedback !== null">Gracias por tu comentario.</span>
+              <template v-else><span>¿Te fue útil?</span><button class="rounded-md border border-slate-200 p-1 text-slate-500 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700" aria-label="Respuesta útil" @click="rateResponse(message, true)"><ThumbsUp :size="13" /></button><button class="rounded-md border border-slate-200 p-1 text-slate-500 transition hover:border-red-300 hover:bg-red-50 hover:text-red-700" aria-label="Respuesta no útil" @click="rateResponse(message, false)"><ThumbsDown :size="13" /></button></template>
+            </div>
           </div>
         </div>
         <div v-if="messages.length === 1 && !loading" class="flex flex-wrap gap-2 pt-1"><button v-for="suggestion in suggestions" :key="suggestion" class="rounded-full border border-cyan-200 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-800 transition hover:bg-cyan-50" @click="sendSuggestion(suggestion)">{{ suggestion }}</button></div>
@@ -38,7 +42,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { ArrowUpRight, BarChart3, LoaderCircle, MessageCircle, Package, Send, Sparkles, Trash2, X } from 'lucide-vue-next';
+import { ArrowUpRight, BarChart3, LoaderCircle, MessageCircle, Package, Send, Sparkles, ThumbsDown, ThumbsUp, Trash2, X } from 'lucide-vue-next';
 import api from '../api/axios';
 import { createAssistantPresentation } from '../utils/assistantPresentation';
 
@@ -74,6 +78,14 @@ function onKeydown(event) { if (event.key === 'Escape' && open.value) open.value
 onMounted(() => window.addEventListener('keydown', onKeydown));
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 async function sendSuggestion(suggestion) { draft.value = suggestion; await sendMessage(); }
+async function rateResponse(message, helpful) {
+  try {
+    await api.post('/chat/feedback', { interaction_id: message.interactionId, helpful });
+    message.feedback = helpful;
+  } catch {
+    // La retroalimentación es opcional y no debe interrumpir la conversación.
+  }
+}
 async function sendMessage() {
   const text = draft.value.trim();
   if (!text || loading.value) return;
@@ -83,7 +95,7 @@ async function sendMessage() {
   await scrollToBottom();
   try {
     const { data } = await api.post('/chat', { mensaje: text });
-    messages.value.push({ role: 'assistant', text: data.respuesta || 'No recibí una respuesta válida. Intenta nuevamente.', products: data.productos || [], presentation: createAssistantPresentation(data.code, data.data) });
+    messages.value.push({ role: 'assistant', text: data.respuesta || 'No recibí una respuesta válida. Intenta nuevamente.', products: data.productos || [], presentation: createAssistantPresentation(data.code, data.data), interactionId: data.assistant_interaction_id || null, feedback: null });
   } catch {
     messages.value.push({ role: 'assistant', text: 'No pude consultar el asistente en este momento. Inténtalo nuevamente.' });
   } finally {
