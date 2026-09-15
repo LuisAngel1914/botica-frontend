@@ -2,7 +2,7 @@
   <section class="app-card flex min-h-0 flex-col overflow-hidden">
     <header class="border-b border-slate-100 p-4 sm:p-5">
       <div class="mb-4 flex items-start justify-between gap-4"><div><p class="text-xs font-semibold uppercase tracking-wider text-cyan-700">Catálogo</p><h2 class="mt-1 text-lg font-bold text-slate-900">Productos disponibles</h2></div><span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">{{ products.length }} resultados</span></div>
-      <form class="flex gap-2" @submit.prevent="$emit('search')"><div class="relative min-w-0 flex-1"><Search class="pointer-events-none absolute left-3 top-3 text-slate-400" :size="18" /><input :value="query" class="field-control pl-10" placeholder="Nombre o código de barras…" aria-label="Buscar producto" @input="$emit('update:query', $event.target.value)" /></div><button class="btn btn-primary px-3 sm:px-4" type="submit"><Search :size="18" /><span class="hidden sm:inline">Buscar</span></button></form>
+      <form class="flex gap-2" @submit.prevent="$emit('search')"><div class="relative min-w-0 flex-1"><Search class="pointer-events-none absolute left-3 top-3 text-slate-400" :size="18" /><input :value="query" class="field-control pl-10" placeholder="Nombre, principio activo o código…" aria-label="Buscar producto" @input="$emit('update:query', $event.target.value)" /></div><button class="btn btn-primary px-3 sm:px-4" type="submit"><Search :size="18" /><span class="hidden sm:inline">Buscar</span></button></form>
     </header>
 
     <div v-if="!query && quickProducts.length" class="border-b border-slate-100 bg-slate-50/70 p-4">
