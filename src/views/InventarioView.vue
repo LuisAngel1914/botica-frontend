@@ -1,126 +1,1131 @@
 <template>
   <div class="mx-auto max-w-7xl space-y-6">
-    <PageHeader eyebrow="Catálogo y abastecimiento" title="Centro de inventario" description="Controla existencias, lotes, vencimientos y movimientos trazables.">
-      <template #actions><button class="btn btn-primary" @click="openProduct()">Nuevo producto</button></template>
+    <PageHeader
+      eyebrow="Catálogo y abastecimiento"
+      title="Centro de inventario"
+      description="Controla existencias, lotes, vencimientos y movimientos trazables."
+    >
+      <template #actions
+        ><button class="btn btn-primary" @click="openProduct()">
+          Nuevo producto
+        </button></template
+      >
     </PageHeader>
     <InlineNotice :notice="notice" @dismiss="notice = null" />
 
     <div class="grid gap-4 sm:grid-cols-3">
-      <article class="app-card p-5"><p class="text-sm font-semibold text-slate-500">Productos críticos</p><p class="mt-2 text-3xl font-black text-red-700">{{ lowStock.length }}</p><p class="mt-1 text-xs text-slate-500">Con stock igual o menor al mínimo.</p></article>
-      <article class="app-card p-5"><p class="text-sm font-semibold text-slate-500">Lotes por vencer</p><p class="mt-2 text-3xl font-black text-amber-700">{{ expiringLots.length }}</p><p class="mt-1 text-xs text-slate-500">Con stock y vencimiento en 60 días.</p></article>
-      <article class="app-card p-5"><p class="text-sm font-semibold text-slate-500">Unidades registradas</p><p class="mt-2 text-3xl font-black text-cyan-700">{{ totalUnits }}</p><p class="mt-1 text-xs text-slate-500">Existencia consolidada del catálogo.</p></article>
+      <article class="app-card p-5">
+        <p class="text-sm font-semibold text-slate-500">Productos críticos</p>
+        <p class="mt-2 text-3xl font-black text-red-700">
+          {{ lowStock.length }}
+        </p>
+        <p class="mt-1 text-xs text-slate-500">
+          Con stock igual o menor al mínimo.
+        </p>
+      </article>
+      <article class="app-card p-5">
+        <p class="text-sm font-semibold text-slate-500">Lotes por vencer</p>
+        <p class="mt-2 text-3xl font-black text-amber-700">
+          {{ expiringLots.length }}
+        </p>
+        <p class="mt-1 text-xs text-slate-500">
+          Con stock y vencimiento en 60 días.
+        </p>
+      </article>
+      <article class="app-card p-5">
+        <p class="text-sm font-semibold text-slate-500">Unidades registradas</p>
+        <p class="mt-2 text-3xl font-black text-cyan-700">{{ totalUnits }}</p>
+        <p class="mt-1 text-xs text-slate-500">
+          Existencia consolidada del catálogo.
+        </p>
+      </article>
     </div>
 
     <section class="app-card overflow-hidden">
-      <div class="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 class="font-bold text-slate-900">Alertas operativas</h2><p class="text-sm text-slate-500">Prioriza reposición y rotación antes de que afecten tus ventas.</p></div><button class="btn btn-secondary" :disabled="loading" @click="loadData">Actualizar</button></div>
-      <div class="grid divide-y divide-slate-100 md:grid-cols-2 md:divide-x md:divide-y-0"><div class="p-4"><p class="mb-3 text-xs font-bold uppercase tracking-wider text-red-700">Stock crítico</p><div v-if="lowStock.length" class="space-y-2"><button v-for="product in lowStock.slice(0, 5)" :key="product.id" class="flex w-full items-center justify-between rounded-xl bg-red-50 p-3 text-left" @click="openLot(product)"><span><strong class="block text-sm text-slate-800">{{ product.nombre }}</strong><span class="text-xs text-slate-500">{{ product.stock_actual }} disponibles · mínimo {{ product.stock_minimo }}</span></span><span class="text-xs font-bold text-red-700">Reponer</span></button></div><p v-else class="py-4 text-sm text-slate-500">No hay productos críticos.</p></div><div class="p-4"><p class="mb-3 text-xs font-bold uppercase tracking-wider text-amber-700">Próximos vencimientos</p><div v-if="expiringLots.length" class="space-y-2"><div v-for="lot in expiringLots.slice(0, 5)" :key="lot.id" class="flex items-center justify-between rounded-xl bg-amber-50 p-3"><span><strong class="block text-sm text-slate-800">{{ lot.producto?.nombre }}</strong><span class="text-xs text-slate-500">Lote {{ lot.numero_lote }} · {{ lot.stock }} unidades</span></span><span class="text-xs font-bold text-amber-800">{{ daysUntil(lot.fecha_vencimiento) }} días</span></div></div><p v-else class="py-4 text-sm text-slate-500">No hay lotes próximos a vencer.</p></div></div>
+      <div
+        class="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <h2 class="font-bold text-slate-900">Alertas operativas</h2>
+          <p class="text-sm text-slate-500">
+            Prioriza reposición y rotación antes de que afecten tus ventas.
+          </p>
+        </div>
+        <button class="btn btn-secondary" :disabled="loading" @click="loadData">
+          Actualizar
+        </button>
+      </div>
+      <div
+        class="grid divide-y divide-slate-100 md:grid-cols-2 md:divide-x md:divide-y-0"
+      >
+        <div class="p-4">
+          <p
+            class="mb-3 text-xs font-bold uppercase tracking-wider text-red-700"
+          >
+            Stock crítico
+          </p>
+          <div v-if="lowStock.length" class="space-y-2">
+            <button
+              v-for="product in lowStock.slice(0, 5)"
+              :key="product.id"
+              class="flex w-full items-center justify-between rounded-xl bg-red-50 p-3 text-left"
+              @click="openLot(product)"
+            >
+              <span
+                ><strong class="block text-sm text-slate-800">{{
+                  product.nombre
+                }}</strong
+                ><span class="text-xs text-slate-500"
+                  >{{ product.stock_actual }} disponibles · mínimo
+                  {{ product.stock_minimo }}</span
+                ></span
+              ><span class="text-xs font-bold text-red-700">Reponer</span>
+            </button>
+          </div>
+          <p v-else class="py-4 text-sm text-slate-500">
+            No hay productos críticos.
+          </p>
+        </div>
+        <div class="p-4">
+          <p
+            class="mb-3 text-xs font-bold uppercase tracking-wider text-amber-700"
+          >
+            Próximos vencimientos
+          </p>
+          <div v-if="expiringLots.length" class="space-y-2">
+            <div
+              v-for="lot in expiringLots.slice(0, 5)"
+              :key="lot.id"
+              class="flex items-center justify-between rounded-xl bg-amber-50 p-3"
+            >
+              <span
+                ><strong class="block text-sm text-slate-800">{{
+                  lot.producto?.nombre
+                }}</strong
+                ><span class="text-xs text-slate-500"
+                  >Lote {{ lot.numero_lote }} · {{ lot.stock }} unidades</span
+                ></span
+              ><span class="text-xs font-bold text-amber-800"
+                >{{ daysUntil(lot.fecha_vencimiento) }} días</span
+              >
+            </div>
+          </div>
+          <p v-else class="py-4 text-sm text-slate-500">
+            No hay lotes próximos a vencer.
+          </p>
+        </div>
+      </div>
     </section>
 
     <section class="app-card overflow-hidden">
-      <div class="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 class="font-bold text-slate-900">Productos y lotes</h2><p class="text-sm text-slate-500">Las entradas se gestionan por lote para respetar los vencimientos.</p></div><input v-model="search" class="field-control sm:max-w-xs" placeholder="Buscar producto o código" /></div>
-      <div v-if="loading" class="grid min-h-64 place-items-center text-sm text-slate-500">Cargando inventario…</div>
-      <div v-else-if="filteredProducts.length" class="overflow-x-auto"><table class="w-full min-w-[800px] text-left text-sm"><thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th class="p-4">Producto</th><th class="p-4">Código</th><th class="p-4 text-center">Stock</th><th class="p-4">Próximo vencimiento</th><th class="p-4 text-right">Precio</th><th class="p-4 text-right">Acciones</th></tr></thead><tbody class="divide-y divide-slate-100"><tr v-for="product in filteredProducts" :key="product.id" class="hover:bg-slate-50/70" :class="{ 'bg-cyan-50/70': alertProductId === product.id }"><td class="p-4"><div class="flex items-center gap-3"><img v-if="product.imagen_url" :src="product.imagen_url" :alt="product.nombre" class="h-10 w-10 rounded-xl bg-slate-100 object-cover" @error="$event.target.style.display = 'none'" /><span v-else class="grid h-10 w-10 place-items-center rounded-xl bg-cyan-50 text-xs font-black text-cyan-700">{{ initials(product.nombre) }}</span><div><p class="font-bold text-slate-800">{{ product.nombre }}</p><p class="text-xs text-slate-500">{{ product.presentacion || 'Sin presentación' }}</p></div></div></td><td class="p-4 font-mono text-xs text-slate-500">{{ product.codigo_barras || '—' }}</td><td class="p-4 text-center"><span class="font-black" :class="isLow(product) ? 'text-red-700' : 'text-emerald-700'">{{ product.stock_actual }}</span><span class="block text-xs text-slate-400">mín. {{ product.stock_minimo }}</span></td><td class="p-4"><span v-if="nextLot(product)" class="text-sm" :class="daysUntil(nextLot(product).fecha_vencimiento) <= 60 ? 'font-bold text-amber-700' : 'text-slate-600'">{{ formatDate(nextLot(product).fecha_vencimiento) }}<span class="block text-xs text-slate-400">Lote {{ nextLot(product).numero_lote }}</span></span><span v-else class="text-slate-400">Sin lote activo</span></td><td class="p-4 text-right font-bold text-cyan-700">S/ {{ money(product.precio_venta) }}</td><td class="p-4"><div class="flex justify-end gap-2"><button class="btn btn-secondary !px-3 !py-2 text-xs" @click="openLot(product)">+ Lote</button><button v-if="expiredLotsForProduct(product).length" class="btn !bg-red-600 !px-3 !py-2 text-xs !text-white hover:!bg-red-700" @click="openDisposal(product, expiredLotsForProduct(product)[0])">Baja</button><button class="btn btn-secondary !px-3 !py-2 text-xs" @click="openProduct(product)">Editar</button></div></td></tr></tbody></table></div>
-      <div v-else class="grid min-h-64 place-items-center text-sm text-slate-500">No se encontraron productos.</div>
+      <div
+        class="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <h2 class="font-bold text-slate-900">Productos y lotes</h2>
+          <p class="text-sm text-slate-500">
+            Las entradas se gestionan por lote para respetar los vencimientos.
+          </p>
+        </div>
+        <input
+          v-model="search"
+          class="field-control sm:max-w-xs"
+          placeholder="Buscar producto o código"
+          aria-label="Buscar en inventario"
+        />
+      </div>
+      <div
+        class="flex flex-wrap items-center gap-2 border-b bg-slate-50/70 p-3"
+      >
+        <button
+          v-for="filter in inventoryFilters"
+          :key="filter.value"
+          class="rounded-lg border px-3 py-2 text-xs font-medium"
+          :class="
+            stockFilter === filter.value
+              ? 'border-cyan-700 bg-cyan-50 text-cyan-800'
+              : 'bg-white text-slate-600'
+          "
+          :aria-pressed="stockFilter === filter.value"
+          @click="stockFilter = filter.value"
+        >
+          {{ filter.label }}</button
+        ><span class="ml-auto text-xs text-slate-500"
+          >{{ filteredProducts.length }} productos</span
+        >
+      </div>
+      <SkeletonLoader v-if="loading" label="Cargando inventario…" />
+      <div v-else-if="filteredProducts.length" class="overflow-x-auto">
+        <DataTable class="w-full min-w-[800px] text-left text-sm"
+          ><thead
+            class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500"
+          >
+            <tr>
+              <th scope="col" class="p-4">Producto</th>
+              <th scope="col" class="p-4">Código</th>
+              <th scope="col" class="p-4 text-center">Stock</th>
+              <th scope="col" class="p-4">Próximo vencimiento</th>
+              <th scope="col" class="p-4 text-right">Precio</th>
+              <th scope="col" class="p-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <tr
+              v-for="product in filteredProducts"
+              :key="product.id"
+              class="hover:bg-slate-50/70"
+              :class="{ 'bg-cyan-50/70': alertProductId === product.id }"
+            >
+              <td class="p-4">
+                <div class="flex items-center gap-3">
+                  <ProductImage
+                    class="h-12 w-14 shrink-0 rounded-lg"
+                    :src="product.imagen_url"
+                    :name="product.nombre"
+                  />
+                  <div>
+                    <p class="font-bold text-slate-800">{{ product.nombre }}</p>
+                    <p class="text-xs text-slate-500">
+                      {{ product.presentacion || "Sin presentación" }}
+                    </p>
+                  </div>
+                </div>
+              </td>
+              <td class="p-4 font-mono text-xs text-slate-500">
+                {{ product.codigo_barras || "—" }}
+              </td>
+              <td class="p-4 text-center">
+                <span
+                  class="font-black"
+                  :class="isLow(product) ? 'text-red-700' : 'text-emerald-700'"
+                  >{{ product.stock_actual }}</span
+                ><span class="block text-xs text-slate-400"
+                  >mín. {{ product.stock_minimo }}</span
+                >
+              </td>
+              <td class="p-4">
+                <span
+                  v-if="nextLot(product)"
+                  class="text-sm"
+                  :class="
+                    daysUntil(nextLot(product).fecha_vencimiento) <= 60
+                      ? 'font-bold text-amber-700'
+                      : 'text-slate-600'
+                  "
+                  >{{ formatDate(nextLot(product).fecha_vencimiento)
+                  }}<span class="block text-xs text-slate-400"
+                    >Lote {{ nextLot(product).numero_lote }}</span
+                  ></span
+                ><span v-else class="text-slate-400">Sin lote activo</span>
+              </td>
+              <td class="p-4 text-right font-bold text-cyan-700">
+                S/ {{ money(product.precio_venta) }}
+              </td>
+              <td class="p-4">
+                <div class="flex justify-end gap-2">
+                  <button
+                    class="btn btn-secondary !px-3 !py-2 text-xs"
+                    @click="lotsProduct = product"
+                  >
+                    Ver lotes</button
+                  ><button
+                    class="btn btn-secondary !px-3 !py-2 text-xs"
+                    @click="openLot(product)"
+                  >
+                    + Lote</button
+                  ><button
+                    v-if="expiredLotsForProduct(product).length"
+                    class="btn !bg-red-600 !px-3 !py-2 text-xs !text-white hover:!bg-red-700"
+                    @click="
+                      openDisposal(product, expiredLotsForProduct(product)[0])
+                    "
+                  >
+                    Baja</button
+                  ><button
+                    class="btn btn-secondary !px-3 !py-2 text-xs"
+                    @click="openProduct(product)"
+                  >
+                    Editar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody></DataTable
+        >
+      </div>
+      <EmptyState
+        v-else
+        title="No hay productos con estos filtros"
+        description="Prueba otra búsqueda o registra un producto."
+      />
     </section>
 
     <section class="app-card overflow-hidden">
-      <div class="flex flex-col gap-3 border-b border-slate-100 p-4 lg:flex-row lg:items-center lg:justify-between"><div><h2 class="font-bold text-slate-900">Historial de movimientos</h2><p class="text-sm text-slate-500">Consulta y exporta cada cambio de inventario sin perder trazabilidad.</p></div><button class="btn btn-secondary" :disabled="exporting" @click="exportMovements">{{ exporting ? 'Preparando…' : 'Exportar CSV' }}</button></div>
-      <form class="grid gap-3 border-b border-slate-100 bg-slate-50/70 p-4 sm:grid-cols-2 xl:grid-cols-3" @submit.prevent="loadMovements()">
-        <label><span class="field-label">Producto</span><select v-model="movementFilters.producto_id" class="field-control" @change="movementFilters.lote_id = ''"><option value="">Todos los productos</option><option v-for="product in products" :key="product.id" :value="product.id">{{ product.nombre }}</option></select></label>
-        <label><span class="field-label">Lote</span><select v-model="movementFilters.lote_id" class="field-control" :disabled="!movementFilters.producto_id"><option value="">Todos los lotes</option><option v-for="lot in movementLots" :key="lot.id" :value="lot.id">{{ lot.numero_lote }}</option></select></label>
-        <label><span class="field-label">Tipo</span><select v-model="movementFilters.tipo" class="field-control"><option value="">Todos los tipos</option><option value="entrada_lote">Entrada de lote</option><option value="venta">Venta registrada</option><option value="anulacion_venta">Venta anulada</option><option value="baja_vencimiento">Baja por vencimiento</option><option value="baja_merma">Baja por merma</option></select></label>
-        <label><span class="field-label">Responsable</span><select v-model="movementFilters.user_id" class="field-control"><option value="">Todos los responsables</option><option v-for="user in users" :key="user.id" :value="user.id">{{ user.name }}</option></select></label>
-        <label><span class="field-label">Desde</span><input v-model="movementFilters.fecha_inicio" class="field-control" type="date" /></label>
-        <label><span class="field-label">Hasta</span><input v-model="movementFilters.fecha_fin" class="field-control" type="date" :min="movementFilters.fecha_inicio || undefined" /></label>
-        <div class="flex items-end gap-2"><button class="btn btn-primary flex-1" :disabled="movementLoading">Aplicar filtros</button><button class="btn btn-secondary" type="button" @click="resetMovementFilters">Limpiar</button></div>
+      <div
+        class="flex flex-col gap-3 border-b border-slate-100 p-4 lg:flex-row lg:items-center lg:justify-between"
+      >
+        <div>
+          <h2 class="font-bold text-slate-900">Historial de movimientos</h2>
+          <p class="text-sm text-slate-500">
+            Consulta y exporta cada cambio de inventario sin perder
+            trazabilidad.
+          </p>
+        </div>
+        <button
+          class="btn btn-secondary"
+          :disabled="exporting"
+          @click="exportMovements"
+        >
+          {{ exporting ? "Preparando…" : "Exportar CSV" }}
+        </button>
+      </div>
+      <form
+        class="grid gap-3 border-b border-slate-100 bg-slate-50/70 p-4 sm:grid-cols-2 xl:grid-cols-3"
+        @submit.prevent="loadMovements()"
+      >
+        <label
+          ><span class="field-label">Producto</span
+          ><select
+            v-model="movementFilters.producto_id"
+            class="field-control"
+            @change="movementFilters.lote_id = ''"
+          >
+            <option value="">Todos los productos</option>
+            <option
+              v-for="product in products"
+              :key="product.id"
+              :value="product.id"
+            >
+              {{ product.nombre }}
+            </option>
+          </select></label
+        >
+        <label
+          ><span class="field-label">Lote</span
+          ><select
+            v-model="movementFilters.lote_id"
+            class="field-control"
+            :disabled="!movementFilters.producto_id"
+          >
+            <option value="">Todos los lotes</option>
+            <option v-for="lot in movementLots" :key="lot.id" :value="lot.id">
+              {{ lot.numero_lote }}
+            </option>
+          </select></label
+        >
+        <label
+          ><span class="field-label">Tipo</span
+          ><select v-model="movementFilters.tipo" class="field-control">
+            <option value="">Todos los tipos</option>
+            <option value="entrada_lote">Entrada de lote</option>
+            <option value="venta">Venta registrada</option>
+            <option value="anulacion_venta">Venta anulada</option>
+            <option value="baja_vencimiento">Baja por vencimiento</option>
+            <option value="baja_merma">Baja por merma</option>
+          </select></label
+        >
+        <label
+          ><span class="field-label">Responsable</span
+          ><select v-model="movementFilters.user_id" class="field-control">
+            <option value="">Todos los responsables</option>
+            <option v-for="user in users" :key="user.id" :value="user.id">
+              {{ user.name }}
+            </option>
+          </select></label
+        >
+        <label
+          ><span class="field-label">Desde</span
+          ><input
+            v-model="movementFilters.fecha_inicio"
+            class="field-control"
+            type="date"
+        /></label>
+        <label
+          ><span class="field-label">Hasta</span
+          ><input
+            v-model="movementFilters.fecha_fin"
+            class="field-control"
+            type="date"
+            :min="movementFilters.fecha_inicio || undefined"
+        /></label>
+        <div class="flex items-end gap-2">
+          <button class="btn btn-primary flex-1" :disabled="movementLoading">
+            Aplicar filtros</button
+          ><button
+            class="btn btn-secondary"
+            type="button"
+            @click="resetMovementFilters"
+          >
+            Limpiar
+          </button>
+        </div>
       </form>
-      <div v-if="movementLoading" class="grid min-h-48 place-items-center text-sm text-slate-500">Cargando historial…</div>
-      <div v-else-if="movements.length" class="divide-y divide-slate-100"><article v-for="movement in movements" :key="movement.id" class="flex items-center gap-3 p-4"><span class="grid h-10 w-10 place-items-center rounded-xl text-xs font-black" :class="movement.cantidad > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'">{{ movement.cantidad > 0 ? '+' : '' }}{{ movement.cantidad }}</span><div class="min-w-0 flex-1"><p class="font-semibold text-slate-800">{{ movement.producto?.nombre }}</p><p class="text-xs text-slate-500">{{ movementLabel(movement.tipo) }}<span v-if="movement.lote?.numero_lote"> · Lote {{ movement.lote.numero_lote }}</span><span v-if="movement.referencia"> · {{ movement.referencia }}</span><span v-if="movement.motivo"> · {{ movement.motivo }}</span></p><p class="mt-1 text-xs text-slate-400">Responsable: {{ movement.user?.name || 'No disponible' }}</p></div><time class="text-right text-xs text-slate-400">{{ formatDateTime(movement.created_at) }}</time></article></div>
-      <div v-else class="p-6 text-sm text-slate-500">No hay movimientos con esos filtros.</div>
-      <div v-if="movementMeta.last_page > 1" class="flex items-center justify-between border-t border-slate-100 p-4 text-sm"><span class="text-slate-500">Página {{ movementMeta.current_page }} de {{ movementMeta.last_page }}</span><div class="flex gap-2"><button class="btn btn-secondary !px-3 !py-2 text-xs" :disabled="movementMeta.current_page <= 1 || movementLoading" @click="loadMovements(movementMeta.current_page - 1)">Anterior</button><button class="btn btn-secondary !px-3 !py-2 text-xs" :disabled="movementMeta.current_page >= movementMeta.last_page || movementLoading" @click="loadMovements(movementMeta.current_page + 1)">Siguiente</button></div></div>
+      <div
+        v-if="movementLoading"
+        class="grid min-h-48 place-items-center text-sm text-slate-500"
+      >
+        Cargando historial…
+      </div>
+      <div v-else-if="movements.length" class="divide-y divide-slate-100">
+        <article
+          v-for="movement in movements"
+          :key="movement.id"
+          class="flex items-center gap-3 p-4"
+        >
+          <span
+            class="grid h-10 w-10 place-items-center rounded-xl text-xs font-black"
+            :class="
+              movement.cantidad > 0
+                ? 'bg-emerald-50 text-emerald-700'
+                : 'bg-red-50 text-red-700'
+            "
+            >{{ movement.cantidad > 0 ? "+" : "" }}{{ movement.cantidad }}</span
+          >
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-slate-800">
+              {{ movement.producto?.nombre }}
+            </p>
+            <p class="text-xs text-slate-500">
+              {{ movementLabel(movement.tipo)
+              }}<span v-if="movement.lote?.numero_lote">
+                · Lote {{ movement.lote.numero_lote }}</span
+              ><span v-if="movement.referencia">
+                · {{ movement.referencia }}</span
+              ><span v-if="movement.motivo"> · {{ movement.motivo }}</span>
+            </p>
+            <p class="mt-1 text-xs text-slate-400">
+              Responsable: {{ movement.user?.name || "No disponible" }}
+            </p>
+          </div>
+          <time class="text-right text-xs text-slate-400">{{
+            formatDateTime(movement.created_at)
+          }}</time>
+        </article>
+      </div>
+      <div v-else class="p-6 text-sm text-slate-500">
+        No hay movimientos con esos filtros.
+      </div>
+      <div
+        v-if="movementMeta.last_page > 1"
+        class="flex items-center justify-between border-t border-slate-100 p-4 text-sm"
+      >
+        <span class="text-slate-500"
+          >Página {{ movementMeta.current_page }} de
+          {{ movementMeta.last_page }}</span
+        >
+        <div class="flex gap-2">
+          <button
+            class="btn btn-secondary !px-3 !py-2 text-xs"
+            :disabled="movementMeta.current_page <= 1 || movementLoading"
+            @click="loadMovements(movementMeta.current_page - 1)"
+          >
+            Anterior</button
+          ><button
+            class="btn btn-secondary !px-3 !py-2 text-xs"
+            :disabled="
+              movementMeta.current_page >= movementMeta.last_page ||
+              movementLoading
+            "
+            @click="loadMovements(movementMeta.current_page + 1)"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
     </section>
 
-    <div v-if="productModal" class="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm">
-      <form class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" @submit.prevent="saveProduct">
-        <h2 class="text-lg font-bold text-slate-900">{{ productForm.id ? 'Editar producto' : 'Nuevo producto' }}</h2>
-        <p class="mt-1 text-sm text-slate-500">Completa la ficha comercial para que el equipo identifique el medicamento con precisión.</p>
+    <AppDialog
+      :open="Boolean(lotsProduct)"
+      label="Detalle de lotes"
+      @close="lotsProduct = null"
+    >
+      <section v-if="lotsProduct" class="w-[640px] max-w-full bg-white">
+        <header class="flex items-center justify-between border-b p-5">
+          <div>
+            <p class="section-kicker">Trazabilidad de inventario</p>
+            <h2 class="mt-1 text-lg font-semibold">{{ lotsProduct.nombre }}</h2>
+          </div>
+          <button class="btn btn-secondary" @click="lotsProduct = null">
+            Cerrar
+          </button>
+        </header>
+        <div class="p-5">
+          <div
+            v-for="lot in lotsProduct.lotes || []"
+            :key="lot.id"
+            class="flex flex-wrap items-center justify-between gap-3 border-b py-4"
+          >
+            <div>
+              <strong class="text-sm">Lote {{ lot.numero_lote }}</strong>
+              <p class="mt-1 text-xs text-slate-500">
+                {{ lot.stock }} unidades · Vence
+                {{ formatDate(lot.fecha_vencimiento) }}
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <AppBadge
+                :tone="
+                  isExpired(lot)
+                    ? 'danger'
+                    : Number(lot.stock) <= 0
+                      ? 'neutral'
+                      : daysUntil(lot.fecha_vencimiento) <= 60
+                        ? 'warning'
+                        : 'success'
+                "
+                >{{
+                  isExpired(lot)
+                    ? "Vencido"
+                    : Number(lot.stock) <= 0
+                      ? "Agotado"
+                      : "Vigente"
+                }}</AppBadge
+              ><button
+                v-if="Number(lot.stock) > 0"
+                class="btn btn-secondary !text-xs"
+                @click="
+                  openDisposal(lotsProduct, lot);
+                  lotsProduct = null;
+                "
+              >
+                Registrar baja
+              </button>
+            </div>
+          </div>
+          <EmptyState
+            v-if="!lotsProduct.lotes?.length"
+            title="Sin lotes registrados"
+            description="Registra una entrada para disponer de stock trazable."
+          />
+        </div>
+      </section>
+    </AppDialog>
+    <AppDialog
+      v-if="productModal"
+      :open="true"
+      label="Datos del producto"
+      :busy="saving"
+      :error="notice?.type === 'error' ? notice.message : ''"
+      @close="productModal = false"
+    >
+      <form
+        class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+        @submit.prevent="saveProduct"
+      >
+        <h2 class="text-lg font-bold text-slate-900">
+          {{ productForm.id ? "Editar producto" : "Nuevo producto" }}
+        </h2>
+        <p class="mt-1 text-sm text-slate-500">
+          Completa la ficha comercial para que el equipo identifique el
+          medicamento con precisión.
+        </p>
         <div class="mt-5 grid gap-4 sm:grid-cols-2">
-          <label class="sm:col-span-2"><span class="field-label">Nombre comercial</span><input v-model.trim="productForm.nombre" class="field-control" required /></label>
-          <label><span class="field-label">Código de barras</span><input v-model.trim="productForm.codigo_barras" class="field-control" /></label>
-          <label><span class="field-label">Presentación</span><input v-model.trim="productForm.presentacion" class="field-control" placeholder="Ej. Caja x 20 tabletas" /></label>
-          <label><span class="field-label">Principio activo</span><input v-model.trim="productForm.principio_activo" class="field-control" placeholder="Ej. Paracetamol" /></label>
-          <label><span class="field-label">Categoría</span><input v-model.trim="productForm.categoria" class="field-control" placeholder="Ej. Analgésicos" /></label>
-          <label><span class="field-label">Precio de compra</span><input v-model.number="productForm.precio_compra" class="field-control" min="0" step="0.10" type="number" required /></label>
-          <label><span class="field-label">Precio de venta</span><input v-model.number="productForm.precio_venta" class="field-control" min="0" step="0.10" type="number" required /></label>
-          <label><span class="field-label">Condición de venta</span><select v-model="productForm.condicion_venta" class="field-control"><option value="libre">Venta libre</option><option value="con_receta">Con receta</option><option value="receta_retenida">Receta retenida</option></select></label>
-          <label><span class="field-label">Stock mínimo</span><input v-model.number="productForm.stock_minimo" class="field-control" min="0" type="number" required /></label>
-          <label class="sm:col-span-2"><span class="field-label">URL de imagen</span><input v-model.trim="productForm.imagen_url" class="field-control" type="url" placeholder="https://…" @input="imagePreviewError = false" /><span class="mt-1 block text-xs text-slate-500">Usa una imagen pública y estable del empaque o medicamento.</span></label>
+          <label class="sm:col-span-2"
+            ><span class="field-label">Nombre comercial</span
+            ><input
+              v-model.trim="productForm.nombre"
+              class="field-control"
+              required
+          /></label>
+          <label
+            ><span class="field-label">Código de barras</span
+            ><input
+              v-model.trim="productForm.codigo_barras"
+              class="field-control"
+          /></label>
+          <label
+            ><span class="field-label">Presentación</span
+            ><input
+              v-model.trim="productForm.presentacion"
+              class="field-control"
+              placeholder="Ej. Caja x 20 tabletas"
+          /></label>
+          <label
+            ><span class="field-label">Principio activo</span
+            ><input
+              v-model.trim="productForm.principio_activo"
+              class="field-control"
+              placeholder="Ej. Paracetamol"
+          /></label>
+          <label
+            ><span class="field-label">Categoría</span
+            ><input
+              v-model.trim="productForm.categoria"
+              class="field-control"
+              placeholder="Ej. Analgésicos"
+          /></label>
+          <label
+            ><span class="field-label">Precio de compra</span
+            ><input
+              v-model.number="productForm.precio_compra"
+              class="field-control"
+              min="0"
+              step="0.10"
+              type="number"
+              required
+          /></label>
+          <label
+            ><span class="field-label">Precio de venta</span
+            ><input
+              v-model.number="productForm.precio_venta"
+              class="field-control"
+              min="0"
+              step="0.10"
+              type="number"
+              required
+          /></label>
+          <label
+            ><span class="field-label">Condición de venta</span
+            ><select
+              v-model="productForm.condicion_venta"
+              class="field-control"
+            >
+              <option value="libre">Venta libre</option>
+              <option value="con_receta">Con receta</option>
+              <option value="receta_retenida">Receta retenida</option>
+            </select></label
+          >
+          <label
+            ><span class="field-label">Stock mínimo</span
+            ><input
+              v-model.number="productForm.stock_minimo"
+              class="field-control"
+              min="0"
+              type="number"
+              required
+          /></label>
+          <label class="sm:col-span-2"
+            ><span class="field-label">URL de imagen</span
+            ><input
+              v-model.trim="productForm.imagen_url"
+              class="field-control"
+              type="url"
+              placeholder="https://…"
+              @input="imagePreviewError = false"
+            /><span class="mt-1 block text-xs text-slate-500"
+              >Usa una imagen pública y estable del empaque o medicamento.</span
+            ></label
+          >
         </div>
-        <div v-if="productForm.imagen_url" class="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-          <img v-if="!imagePreviewError" :key="productForm.imagen_url" :src="productForm.imagen_url" :alt="'Vista previa de ' + (productForm.nombre || 'producto')" class="h-40 w-full object-contain p-3" @error="imagePreviewError = true" />
-          <p v-else class="p-4 text-sm text-red-700">No se pudo cargar esta imagen. Revisa que la URL sea pública y apunte a un archivo de imagen.</p>
+        <div
+          v-if="productForm.imagen_url"
+          class="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
+        >
+          <img
+            v-if="!imagePreviewError"
+            :key="productForm.imagen_url"
+            :src="productForm.imagen_url"
+            :alt="'Vista previa de ' + (productForm.nombre || 'producto')"
+            class="h-40 w-full object-contain p-3"
+            @error="imagePreviewError = true"
+          />
+          <p v-else class="p-4 text-sm text-red-700">
+            No se pudo cargar esta imagen. Revisa que la URL sea pública y
+            apunte a un archivo de imagen.
+          </p>
         </div>
-        <div class="mt-6 flex justify-end gap-3"><button class="btn btn-secondary" type="button" @click="productModal = false">Cancelar</button><button class="btn btn-primary" :disabled="saving">{{ saving ? 'Guardando…' : 'Guardar' }}</button></div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            class="btn btn-secondary"
+            type="button"
+            @click="productModal = false"
+          >
+            Cancelar</button
+          ><button class="btn btn-primary" :disabled="saving">
+            {{ saving ? "Guardando…" : "Guardar" }}
+          </button>
+        </div>
       </form>
-    </div>
+    </AppDialog>
 
-    <div v-if="lotModal" class="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm"><form class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @submit.prevent="saveLot"><p class="text-xs font-bold uppercase tracking-wider text-violet-700">Reposición</p><h2 class="mt-1 text-lg font-bold text-slate-900">{{ selectedProduct?.nombre }}</h2><div class="mt-5 space-y-4"><label><span class="field-label">Número de lote</span><input v-model.trim="lotForm.numero_lote" class="field-control" required /></label><label><span class="field-label">Cantidad ingresada</span><input v-model.number="lotForm.stock" class="field-control" min="1" type="number" required /></label><label><span class="field-label">Fecha de vencimiento</span><input v-model="lotForm.fecha_vencimiento" class="field-control" type="date" required /></label><label><span class="field-label">Nota de ingreso <em class="font-normal">(opcional)</em></span><textarea v-model.trim="lotForm.motivo" class="field-control min-h-20" placeholder="Ej. Compra a proveedor…" /></label></div><div class="mt-6 flex justify-end gap-3"><button class="btn btn-secondary" type="button" @click="lotModal = false">Cancelar</button><button class="btn !bg-violet-600 !text-white hover:!bg-violet-700" :disabled="saving">{{ saving ? 'Registrando…' : 'Registrar lote' }}</button></div></form></div>
+    <AppDialog
+      v-if="lotModal"
+      :open="true"
+      label="Registrar lote"
+      :busy="saving"
+      :error="notice?.type === 'error' ? notice.message : ''"
+      @close="lotModal = false"
+      ><form
+        class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        @submit.prevent="saveLot"
+      >
+        <p class="section-kicker">
+          Reposición
+        </p>
+        <h2 class="mt-1 text-lg font-bold text-slate-900">
+          {{ selectedProduct?.nombre }}
+        </h2>
+        <div class="mt-5 space-y-4">
+          <label
+            ><span class="field-label">Número de lote</span
+            ><input
+              v-model.trim="lotForm.numero_lote"
+              class="field-control"
+              required /></label
+          ><label
+            ><span class="field-label">Cantidad ingresada</span
+            ><input
+              v-model.number="lotForm.stock"
+              class="field-control"
+              min="1"
+              type="number"
+              required /></label
+          ><label
+            ><span class="field-label">Fecha de vencimiento</span
+            ><input
+              v-model="lotForm.fecha_vencimiento"
+              class="field-control"
+              type="date"
+              required /></label
+          ><label
+            ><span class="field-label"
+              >Nota de ingreso <em class="font-normal">(opcional)</em></span
+            ><textarea
+              v-model.trim="lotForm.motivo"
+              class="field-control min-h-20"
+              placeholder="Ej. Compra a proveedor…"
+            />
+          </label>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            class="btn btn-secondary"
+            type="button"
+            @click="lotModal = false"
+          >
+            Cancelar</button
+          ><button
+            class="btn btn-primary"
+            :disabled="saving"
+          >
+            {{ saving ? "Registrando…" : "Registrar lote" }}
+          </button>
+        </div>
+      </form></AppDialog
+    >
 
-    <div v-if="disposalModal" class="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm"><form class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @submit.prevent="saveDisposal"><p class="text-xs font-bold uppercase tracking-wider text-red-700">Baja trazable</p><h2 class="mt-1 text-lg font-bold text-slate-900">{{ selectedProduct?.nombre }}</h2><p class="mt-1 text-sm text-slate-500">Lote {{ selectedLot?.numero_lote }} · Disponible: {{ selectedLot?.stock }} unidades</p><div class="mt-5 space-y-4"><label><span class="field-label">Tipo de baja</span><select v-model="disposalForm.tipo" class="field-control"><option value="vencimiento">Vencimiento</option><option value="merma">Merma / daño</option></select></label><label><span class="field-label">Cantidad a retirar</span><input v-model.number="disposalForm.cantidad" class="field-control" min="1" :max="selectedLot?.stock" type="number" required /></label><label><span class="field-label">Motivo <em class="font-normal">(obligatorio)</em></span><textarea v-model.trim="disposalForm.motivo" class="field-control min-h-24" minlength="10" required placeholder="Ej. Lote vencido retirado del área de venta…" /></label></div><p class="mt-4 rounded-xl bg-red-50 p-3 text-xs text-red-800">Esta acción descuenta el lote y el stock consolidado. No elimina la trazabilidad.</p><div class="mt-6 flex justify-end gap-3"><button class="btn btn-secondary" type="button" @click="disposalModal = false">Cancelar</button><button class="btn !bg-red-600 !text-white hover:!bg-red-700" :disabled="saving">{{ saving ? 'Registrando…' : 'Registrar baja' }}</button></div></form></div>
+    <AppDialog
+      v-if="disposalModal"
+      :open="true"
+      label="Baja de inventario"
+      :busy="saving"
+      :error="notice?.type === 'error' ? notice.message : ''"
+      @close="disposalModal = false"
+      ><form
+        class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        @submit.prevent="saveDisposal"
+      >
+        <p class="text-xs font-bold uppercase tracking-wider text-red-700">
+          Baja trazable
+        </p>
+        <h2 class="mt-1 text-lg font-bold text-slate-900">
+          {{ selectedProduct?.nombre }}
+        </h2>
+        <p class="mt-1 text-sm text-slate-500">
+          Lote {{ selectedLot?.numero_lote }} · Disponible:
+          {{ selectedLot?.stock }} unidades
+        </p>
+        <div class="mt-5 space-y-4">
+          <label
+            ><span class="field-label">Tipo de baja</span
+            ><select v-model="disposalForm.tipo" class="field-control">
+              <option value="vencimiento">Vencimiento</option>
+              <option value="merma">Merma / daño</option>
+            </select></label
+          ><label
+            ><span class="field-label">Cantidad a retirar</span
+            ><input
+              v-model.number="disposalForm.cantidad"
+              class="field-control"
+              min="1"
+              :max="selectedLot?.stock"
+              type="number"
+              required /></label
+          ><label
+            ><span class="field-label"
+              >Motivo <em class="font-normal">(obligatorio)</em></span
+            ><textarea
+              v-model.trim="disposalForm.motivo"
+              class="field-control min-h-24"
+              minlength="10"
+              required
+              placeholder="Ej. Lote vencido retirado del área de venta…"
+            />
+          </label>
+        </div>
+        <p class="mt-4 rounded-xl bg-red-50 p-3 text-xs text-red-800">
+          Esta acción descuenta el lote y el stock consolidado. No elimina la
+          trazabilidad.
+        </p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            class="btn btn-secondary"
+            type="button"
+            @click="disposalModal = false"
+          >
+            Cancelar</button
+          ><button
+            class="btn !bg-red-600 !text-white hover:!bg-red-700"
+            :disabled="saving"
+          >
+            {{ saving ? "Registrando…" : "Registrar baja" }}
+          </button>
+        </div>
+      </form></AppDialog
+    >
   </div>
 </template>
 <script setup>
-import { computed, onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
-import api from '../api/axios';
-import InlineNotice from '../components/ui/InlineNotice.vue';
-import PageHeader from '../components/ui/PageHeader.vue';
+import AppDialog from "../components/ui/AppDialog.vue";
+import DataTable from "../components/ui/DataTable.vue";
+import { computed, onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
+import api from "../api/axios";
+import InlineNotice from "../components/ui/InlineNotice.vue";
+import PageHeader from "../components/ui/PageHeader.vue";
+import ProductImage from "../components/ui/ProductImage.vue";
+import AppBadge from "../components/ui/AppBadge.vue";
+import EmptyState from "../components/ui/EmptyState.vue";
+import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
 const route = useRoute();
-const products = ref([]), expiringLots = ref([]), movements = ref([]), users = ref([]), loading = ref(false), saving = ref(false), movementLoading = ref(false), exporting = ref(false), search = ref(''), notice = ref(null), productModal = ref(false), lotModal = ref(false), disposalModal = ref(false), selectedProduct = ref(null), selectedLot = ref(null), imagePreviewError = ref(false);
+const stockFilter = ref("all");
+const lotsProduct = ref(null);
+const inventoryFilters = [
+  { value: "all", label: "Todos" },
+  { value: "critical", label: "Stock crítico" },
+  { value: "expiring", label: "Por vencer" },
+  { value: "expired", label: "Lotes vencidos" },
+];
+const products = ref([]),
+  expiringLots = ref([]),
+  movements = ref([]),
+  users = ref([]),
+  loading = ref(false),
+  saving = ref(false),
+  movementLoading = ref(false),
+  exporting = ref(false),
+  search = ref(""),
+  notice = ref(null),
+  productModal = ref(false),
+  lotModal = ref(false),
+  disposalModal = ref(false),
+  selectedProduct = ref(null),
+  selectedLot = ref(null),
+  imagePreviewError = ref(false);
 const movementMeta = ref({ current_page: 1, last_page: 1 });
-const movementFilters = ref({ producto_id: '', lote_id: '', tipo: '', user_id: '', fecha_inicio: '', fecha_fin: '' });
-const emptyProduct = () => ({ id: null, nombre: '', codigo_barras: '', principio_activo: '', presentacion: '', categoria: '', imagen_url: '', precio_compra: 0, precio_venta: 0, stock_actual: 0, stock_minimo: 5, requiere_receta: false, condicion_venta: 'libre' });
-const productForm = ref(emptyProduct()), lotForm = ref({ numero_lote: '', stock: 1, fecha_vencimiento: '', motivo: '' }), disposalForm = ref({ tipo: 'vencimiento', cantidad: 1, motivo: '' });
-const money = value => Number(value || 0).toFixed(2);
-const initials = name => (name || 'RX').split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase();
-const formatDate = value => value ? new Date(value + 'T00:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-const formatDateTime = value => value ? new Date(value).toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
-const daysUntil = value => Math.max(0, Math.ceil((new Date(value + 'T00:00:00') - new Date()) / 86400000));
-const isLow = product => Number(product.stock_actual) <= Number(product.stock_minimo);
-const isExpired = lot => Number(lot.stock) > 0 && new Date(lot.fecha_vencimiento + 'T00:00:00') < new Date(new Date().toDateString());
-const expiredLotsForProduct = product => (product.lotes || []).filter(isExpired);
-const nextLot = product => (product.lotes || []).find(lot => Number(lot.stock) > 0);
+const movementFilters = ref({
+  producto_id: "",
+  lote_id: "",
+  tipo: "",
+  user_id: "",
+  fecha_inicio: "",
+  fecha_fin: "",
+});
+const emptyProduct = () => ({
+  id: null,
+  nombre: "",
+  codigo_barras: "",
+  principio_activo: "",
+  presentacion: "",
+  categoria: "",
+  imagen_url: "",
+  precio_compra: 0,
+  precio_venta: 0,
+  stock_actual: 0,
+  stock_minimo: 5,
+  requiere_receta: false,
+  condicion_venta: "libre",
+});
+const productForm = ref(emptyProduct()),
+  lotForm = ref({
+    numero_lote: "",
+    stock: 1,
+    fecha_vencimiento: "",
+    motivo: "",
+  }),
+  disposalForm = ref({ tipo: "vencimiento", cantidad: 1, motivo: "" });
+const money = (value) => Number(value || 0).toFixed(2);
+const initials = (name) =>
+  (name || "RX")
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+const formatDate = (value) =>
+  value
+    ? new Date(value + "T00:00:00").toLocaleDateString("es-PE", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+const formatDateTime = (value) =>
+  value
+    ? new Date(value).toLocaleString("es-PE", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : "—";
+const daysUntil = (value) =>
+  Math.max(
+    0,
+    Math.ceil((new Date(value + "T00:00:00") - new Date()) / 86400000),
+  );
+const isLow = (product) =>
+  Number(product.stock_actual) <= Number(product.stock_minimo);
+const isExpired = (lot) =>
+  Number(lot.stock) > 0 &&
+  new Date(lot.fecha_vencimiento + "T00:00:00") <
+    new Date(new Date().toDateString());
+const expiredLotsForProduct = (product) =>
+  (product.lotes || []).filter(isExpired);
+const nextLot = (product) =>
+  [...(product.lotes || [])]
+    .filter((lot) => Number(lot.stock) > 0)
+    .sort((a, b) => a.fecha_vencimiento.localeCompare(b.fecha_vencimiento))[0];
 const alertProductId = computed(() => Number(route.query.product) || null);
 const lowStock = computed(() => products.value.filter(isLow));
-const totalUnits = computed(() => products.value.reduce((total, product) => total + Number(product.stock_actual || 0), 0));
-const filteredProducts = computed(() => { const query = search.value.trim().toLowerCase(); return !query ? products.value : products.value.filter(product => [product.nombre, product.codigo_barras, product.principio_activo].filter(Boolean).some(value => value.toLowerCase().includes(query))); });
-const movementLots = computed(() => products.value.find(product => product.id === Number(movementFilters.value.producto_id))?.lotes || []);
-const movementLabel = type => ({ entrada_lote: 'Entrada de lote', venta: 'Venta registrada', anulacion_venta: 'Venta anulada', baja_vencimiento: 'Baja por vencimiento', baja_merma: 'Baja por merma' }[type] || type);
-function show(message, type = 'success') { notice.value = { message, type }; }
-async function loadData() { loading.value = true; try { const [productResponse, expiringResponse, usersResponse] = await Promise.all([api.get('/inventario'), api.get('/inventario/por-vencer'), api.get('/usuarios')]); products.value = productResponse.data.data || productResponse.data || []; expiringLots.value = expiringResponse.data.data || expiringResponse.data || []; users.value = usersResponse.data.data || usersResponse.data || []; await loadMovements(); } catch { show('No se pudo cargar el centro de inventario.', 'error'); } finally { loading.value = false; } }
-async function loadMovements(page = 1) { movementLoading.value = true; try { const params = Object.fromEntries(Object.entries(movementFilters.value).filter(([, value]) => value !== '' && value !== null)); const response = await api.get('/inventario/movimientos', { params: { ...params, page } }); movements.value = response.data.data || []; movementMeta.value = { current_page: response.data.current_page || 1, last_page: response.data.last_page || 1 }; } catch { show('No se pudo cargar el historial de movimientos.', 'error'); } finally { movementLoading.value = false; } }
-function resetMovementFilters() { movementFilters.value = { producto_id: '', lote_id: '', tipo: '', user_id: '', fecha_inicio: '', fecha_fin: '' }; loadMovements(); }
-async function exportMovements() { exporting.value = true; try { const params = Object.fromEntries(Object.entries(movementFilters.value).filter(([, value]) => value !== '' && value !== null)); const response = await api.get('/inventario/movimientos/exportar', { params, responseType: 'blob' }); const url = URL.createObjectURL(response.data); const link = document.createElement('a'); link.href = url; link.download = 'historial-inventario.csv'; link.click(); URL.revokeObjectURL(url); } catch { show('No se pudo exportar el historial de movimientos.', 'error'); } finally { exporting.value = false; } }
+const totalUnits = computed(() =>
+  products.value.reduce(
+    (total, product) => total + Number(product.stock_actual || 0),
+    0,
+  ),
+);
+const filteredProducts = computed(() => {
+  const query = search.value.trim().toLowerCase();
+  return products.value.filter((product) => {
+    const matches =
+      !query ||
+      [product.nombre, product.codigo_barras, product.principio_activo]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query));
+    const risk =
+      stockFilter.value === "all" ||
+      (stockFilter.value === "critical" && isLow(product)) ||
+      (stockFilter.value === "expired" &&
+        expiredLotsForProduct(product).length > 0) ||
+      (stockFilter.value === "expiring" &&
+        (product.lotes || []).some(
+          (lot) =>
+            Number(lot.stock) > 0 &&
+            !isExpired(lot) &&
+            daysUntil(lot.fecha_vencimiento) <= 60,
+        ));
+    return matches && risk;
+  });
+});
+const movementLots = computed(
+  () =>
+    products.value.find(
+      (product) => product.id === Number(movementFilters.value.producto_id),
+    )?.lotes || [],
+);
+const movementLabel = (type) =>
+  ({
+    entrada_lote: "Entrada de lote",
+    venta: "Venta registrada",
+    anulacion_venta: "Venta anulada",
+    baja_vencimiento: "Baja por vencimiento",
+    baja_merma: "Baja por merma",
+  })[type] || type;
+function show(message, type = "success") {
+  notice.value = { message, type };
+}
+async function loadData() {
+  loading.value = true;
+  try {
+    const [productResponse, expiringResponse, usersResponse] =
+      await Promise.all([
+        api.get("/inventario"),
+        api.get("/inventario/por-vencer"),
+        api.get("/usuarios"),
+      ]);
+    products.value = productResponse.data.data || productResponse.data || [];
+    expiringLots.value =
+      expiringResponse.data.data || expiringResponse.data || [];
+    users.value = usersResponse.data.data || usersResponse.data || [];
+    await loadMovements();
+  } catch {
+    show("No se pudo cargar el centro de inventario.", "error");
+  } finally {
+    loading.value = false;
+  }
+}
+async function loadMovements(page = 1) {
+  movementLoading.value = true;
+  try {
+    const params = Object.fromEntries(
+      Object.entries(movementFilters.value).filter(
+        ([, value]) => value !== "" && value !== null,
+      ),
+    );
+    const response = await api.get("/inventario/movimientos", {
+      params: { ...params, page },
+    });
+    movements.value = response.data.data || [];
+    movementMeta.value = {
+      current_page: response.data.current_page || 1,
+      last_page: response.data.last_page || 1,
+    };
+  } catch {
+    show("No se pudo cargar el historial de movimientos.", "error");
+  } finally {
+    movementLoading.value = false;
+  }
+}
+function resetMovementFilters() {
+  movementFilters.value = {
+    producto_id: "",
+    lote_id: "",
+    tipo: "",
+    user_id: "",
+    fecha_inicio: "",
+    fecha_fin: "",
+  };
+  loadMovements();
+}
+async function exportMovements() {
+  exporting.value = true;
+  try {
+    const params = Object.fromEntries(
+      Object.entries(movementFilters.value).filter(
+        ([, value]) => value !== "" && value !== null,
+      ),
+    );
+    const response = await api.get("/inventario/movimientos/exportar", {
+      params,
+      responseType: "blob",
+    });
+    const url = URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "historial-inventario.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    show("No se pudo exportar el historial de movimientos.", "error");
+  } finally {
+    exporting.value = false;
+  }
+}
 function openAlertContext() {
-  const product = products.value.find((item) => item.id === alertProductId.value);
+  const product = products.value.find(
+    (item) => item.id === alertProductId.value,
+  );
   if (!product) return;
   search.value = product.nombre;
-  if (route.query.action === 'lote') openLot(product);
-  if (route.query.action === 'baja') {
-    const lote = (product.lotes || []).find((item) => item.id === Number(route.query.lote));
+  if (route.query.action === "lote") openLot(product);
+  if (route.query.action === "baja") {
+    const lote = (product.lotes || []).find(
+      (item) => item.id === Number(route.query.lote),
+    );
     if (lote) openDisposal(product, lote);
   }
 }
 function openDisposal(product, lote) {
   selectedProduct.value = product;
   selectedLot.value = lote;
-  disposalForm.value = { tipo: 'vencimiento', cantidad: 1, motivo: '' };
+  disposalForm.value = {
+    tipo: isExpired(lote) ? "vencimiento" : "merma",
+    cantidad: 1,
+    motivo: "",
+  };
   disposalModal.value = true;
 }
-function openProduct(product = null) { productForm.value = product ? { ...emptyProduct(), ...product, condicion_venta: product.condicion_venta || (product.requiere_receta ? 'con_receta' : 'libre') } : emptyProduct(); imagePreviewError.value = false; productModal.value = true; }
-function openLot(product) { selectedProduct.value = product; lotForm.value = { numero_lote: '', stock: 1, fecha_vencimiento: '', motivo: '' }; lotModal.value = true; }
-async function saveProduct() { saving.value = true; try { const payload = { ...productForm.value, imagen_url: productForm.value.imagen_url || null, codigo_barras: productForm.value.codigo_barras || null, principio_activo: productForm.value.principio_activo || null, presentacion: productForm.value.presentacion || null, categoria: productForm.value.categoria || null, precio_compra: Number(productForm.value.precio_compra), precio_venta: Number(productForm.value.precio_venta), stock_minimo: Number(productForm.value.stock_minimo) }; if (productForm.value.id) await api.put('/productos/' + productForm.value.id, payload); else await api.post('/productos', payload); productModal.value = false; show('Producto guardado correctamente.'); await loadData(); } catch (error) { show(error.response?.data?.message || 'No se pudo guardar el producto.', 'error'); } finally { saving.value = false; } }
-async function saveLot() { saving.value = true; try { await api.post('/inventario/lote', { producto_id: selectedProduct.value.id, ...lotForm.value, stock: Number(lotForm.value.stock) }); lotModal.value = false; show('Lote registrado y stock actualizado.'); await loadData(); } catch (error) { show(error.response?.data?.message || 'No se pudo registrar el lote.', 'error'); } finally { saving.value = false; } }
-async function saveDisposal() { saving.value = true; try { await api.post('/inventario/lotes/' + selectedLot.value.id + '/baja', { ...disposalForm.value, cantidad: Number(disposalForm.value.cantidad) }); disposalModal.value = false; show('Baja registrada y trazabilidad actualizada.'); await loadData(); } catch (error) { show(error.response?.data?.message || 'No se pudo registrar la baja.', 'error'); } finally { saving.value = false; } }
-onMounted(async () => { await loadData(); openAlertContext(); });
+function openProduct(product = null) {
+  productForm.value = product
+    ? {
+        ...emptyProduct(),
+        ...product,
+        condicion_venta:
+          product.condicion_venta ||
+          (product.requiere_receta ? "con_receta" : "libre"),
+      }
+    : emptyProduct();
+  imagePreviewError.value = false;
+  productModal.value = true;
+}
+function openLot(product) {
+  selectedProduct.value = product;
+  lotForm.value = {
+    numero_lote: "",
+    stock: 1,
+    fecha_vencimiento: "",
+    motivo: "",
+  };
+  lotModal.value = true;
+}
+async function saveProduct() {
+  saving.value = true;
+  try {
+    const payload = {
+      ...productForm.value,
+      imagen_url: productForm.value.imagen_url || null,
+      codigo_barras: productForm.value.codigo_barras || null,
+      principio_activo: productForm.value.principio_activo || null,
+      presentacion: productForm.value.presentacion || null,
+      categoria: productForm.value.categoria || null,
+      precio_compra: Number(productForm.value.precio_compra),
+      precio_venta: Number(productForm.value.precio_venta),
+      stock_minimo: Number(productForm.value.stock_minimo),
+    };
+    if (productForm.value.id)
+      await api.put("/productos/" + productForm.value.id, payload);
+    else await api.post("/productos", payload);
+    productModal.value = false;
+    show("Producto guardado correctamente.");
+    await loadData();
+  } catch (error) {
+    show(
+      error.response?.data?.message || "No se pudo guardar el producto.",
+      "error",
+    );
+  } finally {
+    saving.value = false;
+  }
+}
+async function saveLot() {
+  saving.value = true;
+  try {
+    await api.post("/inventario/lote", {
+      producto_id: selectedProduct.value.id,
+      ...lotForm.value,
+      stock: Number(lotForm.value.stock),
+    });
+    lotModal.value = false;
+    show("Lote registrado y stock actualizado.");
+    await loadData();
+  } catch (error) {
+    show(
+      error.response?.data?.message || "No se pudo registrar el lote.",
+      "error",
+    );
+  } finally {
+    saving.value = false;
+  }
+}
+async function saveDisposal() {
+  saving.value = true;
+  try {
+    await api.post("/inventario/lotes/" + selectedLot.value.id + "/baja", {
+      ...disposalForm.value,
+      cantidad: Number(disposalForm.value.cantidad),
+    });
+    disposalModal.value = false;
+    show("Baja registrada y trazabilidad actualizada.");
+    await loadData();
+  } catch (error) {
+    show(
+      error.response?.data?.message || "No se pudo registrar la baja.",
+      "error",
+    );
+  } finally {
+    saving.value = false;
+  }
+}
+onMounted(async () => {
+  await loadData();
+  openAlertContext();
+});
 </script>

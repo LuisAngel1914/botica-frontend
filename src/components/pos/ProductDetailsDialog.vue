@@ -1,45 +1,89 @@
 <template>
-  <div v-if="open && product" class="fixed inset-0 z-50 flex items-end bg-slate-950/50 p-0 sm:items-center sm:justify-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby="product-detail-title" @click.self="$emit('close')">
-    <section class="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:max-w-lg sm:rounded-3xl">
-      <div class="relative aspect-[16/8] overflow-hidden bg-gradient-to-br from-cyan-100 via-white to-blue-50">
-        <img v-if="product.imagen_url && !imageBroken" :src="product.imagen_url" :alt="product.nombre" class="h-full w-full object-cover" @error="imageBroken = true" />
-        <div v-else class="grid h-full place-items-center text-cyan-700"><Package :size="52" stroke-width="1.4" /></div>
-        <button class="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-slate-700 shadow-sm hover:bg-white" aria-label="Cerrar ficha" @click="$emit('close')"><X :size="18" /></button>
-      </div>
-
-      <div class="p-5 sm:p-6">
-        <div class="flex flex-wrap items-center gap-2"><span v-if="product.requiere_receta" class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">Venta bajo receta</span><span class="rounded-full px-2.5 py-1 text-xs font-bold" :class="stockClass">{{ stockLabel }}</span></div>
-        <h2 id="product-detail-title" class="mt-3 text-2xl font-black tracking-tight text-slate-900">{{ product.nombre }}</h2>
-        <p v-if="product.principio_activo" class="mt-1 text-sm text-slate-600">Principio activo: <strong>{{ product.principio_activo }}</strong></p>
-
-        <dl class="mt-5 grid grid-cols-2 gap-3">
-          <div class="rounded-xl bg-slate-50 p-3"><dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Presentación</dt><dd class="mt-1 text-sm font-bold text-slate-800">{{ product.presentacion || 'No especificada' }}</dd></div>
-          <div class="rounded-xl bg-slate-50 p-3"><dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Categoría</dt><dd class="mt-1 text-sm font-bold text-slate-800">{{ product.categoria || 'General' }}</dd></div>
-          <div class="rounded-xl bg-slate-50 p-3"><dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Disponible</dt><dd class="mt-1 text-sm font-bold text-slate-800">{{ product.stock_disponible || 0 }} unidades</dd></div>
-          <div class="rounded-xl bg-slate-50 p-3"><dt class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Vencimiento próximo</dt><dd class="mt-1 text-sm font-bold text-slate-800">{{ expiryDate }}</dd></div>
+  <AppDialog
+    :open="open && Boolean(product)"
+    label="Ficha de producto"
+    @close="$emit('close')"
+  >
+    <section v-if="product" class="w-[480px] max-w-full bg-white">
+      <header class="flex items-center justify-between border-b px-5 py-3">
+        <p class="section-kicker">Ficha de catálogo</p>
+        <button
+          class="icon-button"
+          aria-label="Cerrar ficha"
+          @click="$emit('close')"
+        >
+          <X :size="18" />
+        </button>
+      </header>
+      <ProductImage
+        class="h-48"
+        :src="product.imagen_url"
+        :name="product.nombre"
+      />
+      <div class="p-5">
+        <div class="flex flex-wrap gap-2">
+          <AppBadge :tone="sellableStock(product) > 0 ? 'success' : 'danger'"
+            >{{ sellableStock(product) }} unidades disponibles</AppBadge
+          ><AppBadge v-if="requiresPrescription(product)" tone="warning"
+            >Venta bajo receta</AppBadge
+          >
+        </div>
+        <h2 class="mt-4 text-xl font-semibold tracking-tight">
+          {{ product.nombre }}
+        </h2>
+        <p class="mt-2 text-sm text-slate-500">
+          {{ product.principio_activo || "Principio activo no especificado" }}
+        </p>
+        <dl class="my-5 divide-y divide-slate-100 text-xs">
+          <div
+            v-for="[label, value] in details"
+            :key="label"
+            class="flex justify-between gap-5 py-3"
+          >
+            <dt class="text-slate-500">{{ label }}</dt>
+            <dd class="text-right font-medium">{{ value }}</dd>
+          </div>
         </dl>
-
-        <div class="mt-5 flex items-end justify-between border-t border-slate-100 pt-5"><div><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Precio de venta</p><p class="mt-1 text-2xl font-black text-cyan-700">S/ {{ money(product.precio_venta) }}</p></div><button class="btn btn-primary" :disabled="Number(product.stock_disponible || 0) <= 0" @click="$emit('select', product)"><ShoppingCart :size="18" />Agregar</button></div>
+        <div class="flex items-center justify-between border-t pt-4">
+          <strong class="text-2xl font-semibold"
+            >S/ {{ money(product.precio_venta) }}</strong
+          ><button
+            class="btn btn-primary"
+            :disabled="disabled || sellableStock(product) <= 0"
+            @click="$emit('select', product)"
+          >
+            <Plus :size="17" />Agregar a venta
+          </button>
+        </div>
       </div>
     </section>
-  </div>
+  </AppDialog>
 </template>
-
 <script setup>
-import { computed, ref, watch } from 'vue';
-import { Package, ShoppingCart, X } from 'lucide-vue-next';
-
-const props = defineProps({ open: Boolean, product: { type: Object, default: null } });
-defineEmits(['close', 'select']);
-const imageBroken = ref(false);
-watch(() => props.product?.id, () => { imageBroken.value = false; });
-
-const money = (value) => Number(value || 0).toFixed(2);
-const sellableStock = computed(() => Number(props.product?.stock_disponible || 0));
-const stockClass = computed(() => sellableStock.value > 5 ? 'bg-emerald-100 text-emerald-800' : sellableStock.value > 0 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800');
-const stockLabel = computed(() => sellableStock.value > 0 ? 'Disponible para venta' : 'Sin stock vigente');
-const expiryDate = computed(() => {
-  const lot = props.product?.lotes?.find((item) => new Date(item.fecha_vencimiento + 'T00:00:00') >= new Date(new Date().toDateString()));
-  return lot ? new Date(lot.fecha_vencimiento + 'T00:00:00').toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Sin lote vigente';
+import { computed } from "vue";
+import { Plus, X } from "lucide-vue-next";
+import AppDialog from "../ui/AppDialog.vue";
+import AppBadge from "../ui/AppBadge.vue";
+import ProductImage from "../ui/ProductImage.vue";
+import {
+  expiryInfo,
+  money,
+  requiresPrescription,
+  sellableStock,
+} from "../../utils/productPresentation";
+const props = defineProps({
+  open: Boolean,
+  product: Object,
+  disabled: Boolean,
 });
+defineEmits(["close", "select"]);
+const details = computed(() => [
+  ["Presentación", props.product?.presentacion || "No especificada"],
+  ["Categoría", props.product?.categoria || "General"],
+  ["Código", props.product?.codigo_barras || "Sin código"],
+  [
+    "Próximo lote vigente",
+    props.product ? expiryInfo(props.product).label : "—",
+  ],
+]);
 </script>
