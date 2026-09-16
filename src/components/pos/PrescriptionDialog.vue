@@ -1,10 +1,80 @@
 <template>
-  <div v-if="open" class="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="prescription-title">
-    <form class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @submit.prevent="$emit('confirm')"><div class="mb-5 flex items-start gap-3"><span class="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-red-700"><FileText :size="20" /></span><div><h2 id="prescription-title" class="font-bold text-slate-900">Validar receta médica</h2><p class="mt-1 text-sm text-slate-500">{{ product?.nombre }} requiere prescripción.</p></div></div><div class="space-y-4"><div><label class="field-label">Nombre del prescriptor</label><input :value="data.prescriptor_nombre" class="field-control" required placeholder="Dr. Juan Pérez" @input="$emit('update:data', { ...data, prescriptor_nombre: $event.target.value })" /></div><div><label class="field-label">Colegiatura</label><input :value="data.prescriptor_colegiatura" class="field-control" required placeholder="Ej. 084920" @input="$emit('update:data', { ...data, prescriptor_colegiatura: $event.target.value })" /></div><label><span class="field-label">Fecha de emisión</span><input :value="data.fecha_emision" class="field-control" type="date" required @input="$emit('update:data', { ...data, fecha_emision: $event.target.value })" /></label><label class="flex gap-2 text-sm text-slate-700"><input :checked="data.verificada" type="checkbox" @change="$emit('update:data', { ...data, verificada: $event.target.checked })" /> Confirmo que la receta fue verificada.</label></div><div class="mt-6 flex justify-end gap-3"><button class="btn btn-secondary" type="button" @click="$emit('close')">Cancelar</button><button class="btn bg-red-600 text-white hover:bg-red-700" type="submit">Añadir a venta</button></div></form>
-  </div>
+  <AppDialog :open="open" label="Validar receta médica" @close="$emit('close')">
+    <form
+      class="w-[440px] max-w-full bg-white p-6"
+      @submit.prevent="$emit('confirm')"
+    >
+      <span
+        class="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-amber-50 text-amber-800"
+        ><FileText :size="22"
+      /></span>
+      <p class="section-kicker">Dispensación responsable</p>
+      <h2 class="mt-1 text-xl font-semibold">Validar receta médica</h2>
+      <p class="mt-2 text-sm text-slate-500">
+        {{ product?.nombre }} requiere prescripción.
+      </p>
+      <div class="mt-6 space-y-4">
+        <label class="block"
+          ><span class="field-label">Nombre del prescriptor</span
+          ><input
+            :value="data.prescriptor_nombre"
+            class="field-control"
+            required
+            autocomplete="off"
+            @input="update('prescriptor_nombre', $event.target.value)" /></label
+        ><label class="block"
+          ><span class="field-label">Colegiatura</span
+          ><input
+            :value="data.prescriptor_colegiatura"
+            class="field-control"
+            required
+            @input="
+              update('prescriptor_colegiatura', $event.target.value)
+            " /></label
+        ><label class="block"
+          ><span class="field-label">Fecha de emisión</span
+          ><input
+            :value="data.fecha_emision"
+            class="field-control"
+            type="date"
+            :max="today"
+            required
+            @input="update('fecha_emision', $event.target.value)" /></label
+        ><label
+          class="flex items-start gap-3 rounded-lg border bg-slate-50 p-3 text-xs leading-5"
+          ><input
+            class="mt-1 accent-teal-700"
+            :checked="data.verificada"
+            type="checkbox"
+            required
+            @change="update('verificada', $event.target.checked)"
+          />Confirmo que revisé y verifiqué la receta médica.</label
+        >
+      </div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button class="btn btn-secondary" type="button" @click="$emit('close')">
+          Cancelar</button
+        ><button class="btn btn-primary" type="submit">Agregar a venta</button>
+      </div>
+    </form>
+  </AppDialog>
 </template>
 <script setup>
-import { FileText } from 'lucide-vue-next';
-defineProps({ open: Boolean, product: Object, data: { type: Object, default: () => ({}) } });
-defineEmits(['close', 'confirm', 'update:data']);
+import { FileText } from "lucide-vue-next";
+import AppDialog from "../ui/AppDialog.vue";
+const props = defineProps({
+  open: Boolean,
+  product: Object,
+  data: { type: Object, default: () => ({}) },
+});
+const emit = defineEmits(["close", "confirm", "update:data"]);
+const date = new Date();
+const today = [
+  date.getFullYear(),
+  String(date.getMonth() + 1).padStart(2, "0"),
+  String(date.getDate()).padStart(2, "0"),
+].join("-");
+function update(key, value) {
+  emit("update:data", { ...props.data, [key]: value });
+}
 </script>
