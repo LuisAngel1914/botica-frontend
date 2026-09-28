@@ -141,17 +141,28 @@
                 >
               </td>
               <td class="p-4 text-right">
-                <button
-                  class="btn px-3 py-2 text-xs"
-                  :class="
-                    user.activo
-                      ? 'bg-red-50 text-red-700 hover:bg-red-100'
-                      : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                  "
-                  @click="requestToggle(user)"
-                >
-                  {{ user.activo ? "Desactivar" : "Reactivar" }}
-                </button>
+                <div class="flex flex-wrap justify-end gap-2">
+                  <button
+                    v-if="user.id !== currentUser.id"
+                    class="btn bg-slate-100 px-3 py-2 text-xs text-slate-700 hover:bg-slate-200"
+                    type="button"
+                    @click="requestPasswordReset(user)"
+                  >
+                    <KeyRound :size="15" /> Restablecer contraseña
+                  </button>
+                  <button
+                    class="btn px-3 py-2 text-xs"
+                    :class="
+                      user.activo
+                        ? 'bg-red-50 text-red-700 hover:bg-red-100'
+                        : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                    "
+                    type="button"
+                    @click="requestToggle(user)"
+                  >
+                    {{ user.activo ? "Desactivar" : "Reactivar" }}
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody></DataTable
@@ -269,14 +280,89 @@
         </div>
       </div></AppDialog
     >
+    <AppDialog
+      v-if="userToReset"
+      :open="true"
+      label="Restablecer contraseña"
+      :busy="saving"
+      :error="resetError"
+      @close="closePasswordReset"
+      ><form
+        class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        @submit.prevent="resetPassword"
+      >
+        <div class="mb-6 flex items-start gap-3">
+          <span class="rounded-xl bg-cyan-50 p-2.5 text-cyan-700">
+            <KeyRound :size="20" />
+          </span>
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">
+              Nueva contraseña
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+              Define una nueva clave para {{ userToReset.name }}. Sus sesiones
+              anteriores se cerrarán automáticamente.
+            </p>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="field-label" for="reset-password">Contraseña nueva</label>
+            <input
+              id="reset-password"
+              v-model="passwordForm.password"
+              class="field-control"
+              required
+              type="password"
+              minlength="8"
+              autocomplete="new-password"
+              placeholder="Mínimo 8 caracteres"
+            />
+          </div>
+          <div>
+            <label class="field-label" for="reset-password-confirmation"
+              >Confirmar contraseña</label
+            >
+            <input
+              id="reset-password-confirmation"
+              v-model="passwordForm.password_confirmation"
+              class="field-control"
+              required
+              type="password"
+              minlength="8"
+              autocomplete="new-password"
+              placeholder="Repite la contraseña"
+            />
+          </div>
+          <p class="rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-800">
+            Esta acción quedará registrada en el historial de actividad. La
+            contraseña nunca se mostrará ni se guardará en dicho historial.
+          </p>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            class="btn btn-secondary"
+            type="button"
+            :disabled="saving"
+            @click="closePasswordReset"
+          >
+            Cancelar
+          </button>
+          <button class="btn btn-primary" :disabled="saving" type="submit">
+            {{ saving ? "Restableciendo…" : "Restablecer contraseña" }}
+          </button>
+        </div>
+      </form></AppDialog
+    >
   </div>
 </template>
 <script setup>
 import AppDialog from "../components/ui/AppDialog.vue";
 import DataTable from "../components/ui/DataTable.vue";
 import { computed, onMounted, ref } from "vue";
-import { LoaderCircle, UserPlus, Users } from "lucide-vue-next";
+import { KeyRound, UserPlus } from "lucide-vue-next";
 import api from "../api/axios";
+import { useAuth } from "../composables/useAuth";
 import InlineNotice from "../components/ui/InlineNotice.vue";
 import PageHeader from "../components/ui/PageHeader.vue";
 import EmptyState from "../components/ui/EmptyState.vue";
@@ -289,7 +375,10 @@ const users = ref([]),
   saving = ref(false),
   showForm = ref(false),
   userToToggle = ref(null),
+  userToReset = ref(null),
+  resetError = ref(""),
   notice = ref(null);
+const { currentUser } = useAuth();
 const userSearch = ref(""),
   roleFilter = ref("");
 const filteredUsers = computed(() =>
@@ -304,7 +393,9 @@ const filteredUsers = computed(() =>
   ),
 );
 const blankForm = () => ({ name: "", email: "", password: "", role: "cajero" });
+const blankPasswordForm = () => ({ password: "", password_confirmation: "" });
 const form = ref(blankForm());
+const passwordForm = ref(blankPasswordForm());
 const money = (value) => Number(value || 0).toFixed(2);
 function show(message, type = "success") {
   notice.value = { message, type };
@@ -364,6 +455,44 @@ async function toggleUser() {
       error.response?.data?.message || "No fue posible actualizar el usuario.",
       "error",
     );
+  } finally {
+    saving.value = false;
+  }
+}
+function requestPasswordReset(user) {
+  userToReset.value = user;
+  passwordForm.value = blankPasswordForm();
+  resetError.value = "";
+}
+function closePasswordReset() {
+  if (saving.value) return;
+  userToReset.value = null;
+  passwordForm.value = blankPasswordForm();
+  resetError.value = "";
+}
+async function resetPassword() {
+  resetError.value = "";
+  if (passwordForm.value.password !== passwordForm.value.password_confirmation) {
+    resetError.value = "Las contraseñas no coinciden.";
+    return;
+  }
+
+  saving.value = true;
+  try {
+    const response = await api.patch(
+      "/usuarios/" + userToReset.value.id + "/password",
+      passwordForm.value,
+    );
+    userToReset.value = null;
+    passwordForm.value = blankPasswordForm();
+    show(
+      response.data?.message ||
+        "Contraseña restablecida y sesiones anteriores cerradas.",
+    );
+  } catch (error) {
+    resetError.value =
+      error.response?.data?.message ||
+      "No fue posible restablecer la contraseña.";
   } finally {
     saving.value = false;
   }

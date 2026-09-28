@@ -46,6 +46,7 @@
         <option value="purchase.received">Compras recibidas</option>
         <option value="user.created">Usuarios creados</option>
         <option value="user.status_changed">Accesos actualizados</option>
+        <option value="user.password_reset">Contraseñas restablecidas</option>
       </select>
     </div>
     <div
@@ -135,6 +136,7 @@
 import { onMounted, ref } from "vue";
 import {
   CircleDollarSign,
+  KeyRound,
   RefreshCw,
   ShieldCheck,
   ShoppingBag,
@@ -225,6 +227,11 @@ const styles = {
     icon: ShieldCheck,
     class: "bg-slate-100 text-slate-800",
   },
+  "user.password_reset": {
+    label: "Contraseña restablecida",
+    icon: KeyRound,
+    class: "bg-amber-100 text-amber-800",
+  },
 };
 const actionStyle = (value) =>
   styles[value] || {
@@ -237,24 +244,26 @@ const formatDate = (value) =>
     dateStyle: "medium",
     timeStyle: "short",
   });
-const summary = (log) =>
-  log.metadata?.monto_corregido !== undefined
-    ? "Original S/ " +
+function summary(log) {
+  if (log.metadata?.monto_corregido !== undefined) {
+    return (
+      "Original S/ " +
       Number(log.metadata.monto_original).toFixed(2) +
       " → Corregido S/ " +
       Number(log.metadata.monto_corregido).toFixed(2)
-    : log.metadata?.total
-      ? "Total S/ " + Number(log.metadata.total).toFixed(2)
-      : log.metadata?.monto_inicial !== undefined
-        ? "Inicial S/ " + Number(log.metadata.monto_inicial).toFixed(2)
-        : log.metadata?.monto_final !== undefined
-          ? "Final S/ " + Number(log.metadata.monto_final).toFixed(2)
-          : log.metadata?.cantidad !== undefined
-            ? log.metadata.producto +
-              " · " +
-              Number(log.metadata.cantidad) +
-              " unidades"
-            : "";
+    );
+  }
+  if (log.metadata?.total) return "Total S/ " + Number(log.metadata.total).toFixed(2);
+  if (log.metadata?.monto_inicial !== undefined)
+    return "Inicial S/ " + Number(log.metadata.monto_inicial).toFixed(2);
+  if (log.metadata?.monto_final !== undefined)
+    return "Final S/ " + Number(log.metadata.monto_final).toFixed(2);
+  if (log.action === "user.password_reset")
+    return `${Number(log.metadata?.sessions_revoked || 0)} sesión(es) anterior(es) cerrada(s)`;
+  if (log.metadata?.cantidad !== undefined)
+    return `${log.metadata.producto} · ${Number(log.metadata.cantidad)} unidades`;
+  return "";
+}
 async function loadLogs(page = 1) {
   loading.value = true;
   error.value = "";
