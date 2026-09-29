@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuth } from "../composables/useAuth";
+import { businessConfig } from "../composables/useBusinessConfig";
 
 const routes = [
   {
@@ -79,6 +80,12 @@ const routes = [
     component: () => import("../views/UsuariosView.vue"),
     meta: { requiresAuth: true, requiresAdmin: true, title: "Usuarios" },
   },
+  {
+    path: "/configuracion",
+    name: "configuracion",
+    component: () => import("../views/ConfiguracionView.vue"),
+    meta: { requiresAuth: true, requiresAdmin: true, title: "Configuración" },
+  },
   { path: "/:pathMatch(.*)*", redirect: "/dashboard" },
 ];
 
@@ -93,6 +100,6 @@ router.beforeEach((to) => {
 });
 router.afterEach((to) => {
   document.title =
-    (to.meta.title || "Gestión farmacéutica") + " · Botica L y L";
+    (to.meta.title || "Gestión farmacéutica") + " · " + businessConfig.value.nombre_comercial;
 });
 export default router;

@@ -1,4 +1,6 @@
-const money = (value) => `S/ ${Number(value || 0).toFixed(2)}`;
+import { businessConfig } from '../composables/useBusinessConfig';
+
+const money = (value) => `${businessConfig.value.simbolo_moneda} ${Number(value || 0).toFixed(2)}`;
 
 const metric = (label, value, tone = 'default') => ({ label, value, tone });
 
@@ -67,7 +69,7 @@ export function createAssistantPresentation(code, data = {}) {
     case 'MEDICAL_ADVICE_UNAVAILABLE':
       return { title: 'Consulta clínica no disponible', tone: 'warning' };
     case 'OUT_OF_SCOPE':
-      return { title: 'Consulta fuera de Botica L y L', tone: 'neutral' };
+      return { title: `Consulta fuera de ${businessConfig.value.nombre_comercial}`, tone: 'neutral' };
     default:
       return null;
   }

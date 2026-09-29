@@ -3,10 +3,10 @@
     <a href="#main-content" class="skip-link">Saltar al contenido</a>
     <aside class="workspace-sidebar">
       <RouterLink :to="homePath" class="flex items-center gap-3 px-2"
-        ><span class="brand-mark"><Cross :size="23" /></span
+        ><span class="brand-mark"><img v-if="businessConfig.logo_url" :src="businessConfig.logo_url" alt="" class="h-full w-full rounded-[inherit] object-cover" /><Cross v-else :size="23" /></span
         ><span
           ><strong class="block text-sm font-semibold text-white"
-            >Botica L y L</strong
+            >{{ businessName }}</strong
           ><small class="text-[10px] text-slate-400"
             >Gestión farmacéutica</small
           ></span
@@ -27,6 +27,9 @@
             }}</small></span
           >
         </div>
+        <button class="workspace-nav-link mb-1 w-full text-xs" type="button" @click="passwordDialogOpen = true">
+          <KeyRound :size="16" />Cambiar mi contraseña
+        </button>
         <button class="workspace-nav-link w-full text-xs" @click="logout">
           <LogOut :size="16" />Cerrar sesión
         </button>
@@ -84,7 +87,7 @@
     >
       <div class="mobile-nav-dialog">
         <div class="flex items-center justify-between">
-          <strong class="text-sm text-white">Botica L y L</strong
+          <strong class="text-sm text-white">{{ businessName }}</strong
           ><button
             class="icon-button !text-white"
             aria-label="Cerrar navegación"
@@ -104,10 +107,34 @@
         </button>
       </div>
     </AppDialog>
+    <AppDialog
+      :open="passwordDialogOpen"
+      label="Cambiar mi contraseña"
+      :busy="passwordSaving"
+      :error="passwordError"
+      @close="closePasswordDialog"
+    >
+      <form class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" @submit.prevent="changePassword">
+        <div class="mb-6">
+          <span class="mb-4 grid h-11 w-11 place-items-center rounded-xl bg-cyan-50 text-cyan-700"><ShieldCheck :size="21" /></span>
+          <h2 class="text-lg font-bold text-slate-900">Protege tu cuenta</h2>
+          <p class="mt-1 text-sm leading-6 text-slate-500">Usa una contraseña distinta, con al menos 8 caracteres, letras y números.</p>
+        </div>
+        <div class="space-y-4">
+          <label class="block"><span class="field-label">Contraseña actual</span><input v-model="passwordForm.password_actual" class="field-control" type="password" autocomplete="current-password" required /></label>
+          <label class="block"><span class="field-label">Nueva contraseña</span><input v-model="passwordForm.password" class="field-control" type="password" autocomplete="new-password" minlength="8" required /></label>
+          <label class="block"><span class="field-label">Confirmar nueva contraseña</span><input v-model="passwordForm.password_confirmation" class="field-control" type="password" autocomplete="new-password" minlength="8" required /></label>
+        </div>
+        <div class="mt-7 flex justify-end gap-3">
+          <button class="btn btn-secondary" type="button" :disabled="passwordSaving" @click="closePasswordDialog">Cancelar</button>
+          <button class="btn btn-primary" type="submit" :disabled="passwordSaving"><LoaderCircle v-if="passwordSaving" class="animate-spin" :size="17" /><KeyRound v-else :size="17" />{{ passwordSaving ? "Actualizando…" : "Actualizar contraseña" }}</button>
+        </div>
+      </form>
+    </AppDialog>
   </div>
 </template>
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   Boxes,
@@ -115,17 +142,22 @@ import {
   ClipboardList,
   Cross,
   History,
+  KeyRound,
   LayoutDashboard,
+  LoaderCircle,
   LogOut,
   Menu,
   ShoppingCart,
   Sparkles,
+  Settings,
+  ShieldCheck,
   Truck,
   Users,
   UserRoundCog,
   X,
 } from "lucide-vue-next";
 import { useAuth } from "../composables/useAuth";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
 import api from "../api/axios";
 import ChatIaModal from "./ChatIaModal.vue";
 import AppDialog from "./ui/AppDialog.vue";
@@ -133,8 +165,13 @@ import AppNavigation from "./AppNavigation.vue";
 const route = useRoute();
 const router = useRouter();
 const { currentUser, role, isAdmin, clearSession } = useAuth();
+const { businessConfig, businessName } = useBusinessConfig();
 const menuOpen = ref(false);
 const assistantOpen = ref(false);
+const passwordDialogOpen = ref(false);
+const passwordSaving = ref(false);
+const passwordError = ref("");
+const passwordForm = reactive({ password_actual: "", password: "", password_confirmation: "" });
 const homePath = computed(() => (isAdmin.value ? "/dashboard" : "/pos"));
 const roleLabel = computed(() =>
   role.value === "admin" ? "Administración" : "Cajero",
@@ -178,6 +215,7 @@ const navigationGroups = computed(() => [
               label: "Usuarios y accesos",
               icon: UserRoundCog,
             },
+            { to: "/configuracion", label: "Configuración", icon: Settings },
           ],
         },
       ]
@@ -212,5 +250,30 @@ async function logout() {
   }
   clearSession();
   await router.replace({ name: "login" });
+}
+function closePasswordDialog() {
+  if (passwordSaving.value) return;
+  passwordDialogOpen.value = false;
+  passwordError.value = "";
+  Object.assign(passwordForm, { password_actual: "", password: "", password_confirmation: "" });
+}
+async function changePassword() {
+  passwordError.value = "";
+  if (passwordForm.password !== passwordForm.password_confirmation) {
+    passwordError.value = "Las contraseñas nuevas no coinciden.";
+    return;
+  }
+  passwordSaving.value = true;
+  let updated = false;
+  try {
+    await api.patch("/perfil/password", passwordForm);
+    updated = true;
+  } catch (error) {
+    const errors = error.response?.data?.errors;
+    passwordError.value = errors ? Object.values(errors).flat()[0] : (error.response?.data?.message || "No pudimos actualizar la contraseña.");
+  } finally {
+    passwordSaving.value = false;
+    if (updated) closePasswordDialog();
+  }
 }
 </script>

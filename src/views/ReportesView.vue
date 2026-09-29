@@ -78,7 +78,7 @@
               <p class="mt-2 text-3xl font-semibold tracking-tight">
                 {{
                   cashStatus.estado === "abierta"
-                    ? "S/ " + money(cashStatus.monto_esperado)
+                    ? currencySymbol + " " + money(cashStatus.monto_esperado)
                     : "Todo comienza en caja"
                 }}
               </p>
@@ -98,13 +98,13 @@
             <div>
               <p class="text-[10px] text-slate-400">Fondo inicial</p>
               <p class="mt-1 text-sm font-semibold">
-                S/ {{ money(cashStatus.monto_inicial) }}
+                {{ currencySymbol }} {{ money(cashStatus.monto_inicial) }}
               </p>
             </div>
             <div>
               <p class="text-[10px] text-slate-400">Devoluciones de hoy</p>
               <p class="mt-1 text-sm font-semibold">
-                S/ {{ money(dashboard.resumen_caja.devoluciones_hoy) }}
+                {{ currencySymbol }} {{ money(dashboard.resumen_caja.devoluciones_hoy) }}
               </p>
             </div>
           </div>
@@ -116,7 +116,7 @@
             <div v-for="[method, amount] in paymentMethods" :key="method">
               <div class="mb-1.5 flex justify-between text-xs">
                 <span class="text-slate-500">{{ method }}</span
-                ><strong class="font-semibold">S/ {{ money(amount) }}</strong>
+                ><strong class="font-semibold">{{ currencySymbol }} {{ money(amount) }}</strong>
               </div>
               <div class="h-1.5 rounded-full bg-slate-100">
                 <div
@@ -235,7 +235,7 @@
             v-else
             icon="calendar"
             title="Vencimientos bajo control"
-            description="Sin lotes que venzan en los próximos 60 días."
+            :description="`Sin lotes que venzan en los próximos ${expiryDays} días.`"
           />
         </article>
       </section>
@@ -266,7 +266,7 @@
                 </p>
               </div>
               <strong class="text-xs font-semibold"
-                >S/ {{ money(product.monto) }}</strong
+                >{{ currencySymbol }} {{ money(product.monto) }}</strong
               >
             </li>
           </ol>
@@ -288,7 +288,7 @@
             <div class="rounded-lg bg-cyan-50 p-3">
               <p class="text-[10px] text-cyan-800">Margen confirmado</p>
               <p class="mt-1 text-xl font-semibold text-cyan-800">
-                S/ {{ money(dashboard.rentabilidad?.margen_confirmado) }}
+                {{ currencySymbol }} {{ money(dashboard.rentabilidad?.margen_confirmado) }}
               </p>
               <p class="mt-1 text-[10px] text-cyan-800">
                 Costo registrado al vender
@@ -297,7 +297,7 @@
             <div class="rounded-lg bg-amber-50 p-3">
               <p class="text-[10px] text-amber-800">Estimado histórico</p>
               <p class="mt-1 text-xl font-semibold text-amber-900">
-                S/
+                {{ currencySymbol }}
                 {{ money(dashboard.rentabilidad?.margen_estimado_historico) }}
               </p>
               <p class="mt-1 text-[10px] text-amber-800">
@@ -328,7 +328,7 @@
                 </p>
               </div>
               <strong class="shrink-0 text-xs font-semibold"
-                >S/
+                >{{ currencySymbol }}
                 {{
                   money(
                     Number(product.margen_confirmado) +
@@ -403,8 +403,10 @@ import EmptyState from "../components/ui/EmptyState.vue";
 import MetricCard from "../components/ui/MetricCard.vue";
 import ProductImage from "../components/ui/ProductImage.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
 
 const router = useRouter();
+const { expiryDays, currencySymbol } = useBusinessConfig();
 const loading = ref(true);
 const error = ref("");
 const reportFrom = ref("");
@@ -445,7 +447,7 @@ const dashboard = ref({
 const metrics = computed(() => [
   {
     label: "Ventas netas hoy",
-    value: "S/ " + money(dashboard.value.resumen_caja.ventas_hoy_monto),
+    value: currencySymbol.value + " " + money(dashboard.value.resumen_caja.ventas_hoy_monto),
     detail:
       dashboard.value.resumen_caja.ventas_hoy_cantidad +
       " transacciones, menos devoluciones",
@@ -454,14 +456,14 @@ const metrics = computed(() => [
   },
   {
     label: "Ventas netas del mes",
-    value: "S/ " + money(dashboard.value.resumen_caja.ventas_mes_monto),
+    value: currencySymbol.value + " " + money(dashboard.value.resumen_caja.ventas_mes_monto),
     detail: "Ventas completadas menos devoluciones",
     icon: TrendingUp,
     iconClass: "bg-emerald-100 text-emerald-800",
   },
   {
     label: "Devoluciones hoy",
-    value: "S/ " + money(dashboard.value.resumen_caja.devoluciones_hoy),
+    value: currencySymbol.value + " " + money(dashboard.value.resumen_caja.devoluciones_hoy),
     detail: "Reembolsos registrados hoy",
     icon: CreditCard,
     iconClass: "bg-amber-100 text-amber-800",
@@ -496,7 +498,7 @@ const metrics = computed(() => [
   },
   {
     label: "Margen confirmado",
-    value: "S/ " + money(dashboard.value.rentabilidad?.margen_confirmado),
+    value: currencySymbol.value + " " + money(dashboard.value.rentabilidad?.margen_confirmado),
     detail: "Ventas con costo congelado",
     icon: TrendingUp,
     iconClass: "bg-emerald-100 text-emerald-800",

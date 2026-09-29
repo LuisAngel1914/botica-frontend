@@ -6,8 +6,11 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue';
 import { useRoute, RouterView } from 'vue-router';
 import AppShell from './components/AppShell.vue';
+import { loadBusinessConfig } from './composables/useBusinessConfig';
 
 const route = useRoute();
+onMounted(() => loadBusinessConfig());
 </script>

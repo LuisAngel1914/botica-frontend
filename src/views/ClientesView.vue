@@ -32,7 +32,7 @@
           Compra promedio visible
         </p>
         <p class="mt-2 text-3xl font-black text-emerald-700">
-          S/ {{ money(averageSpend) }}
+          {{ currencySymbol }} {{ money(averageSpend) }}
         </p>
         <p class="mt-1 text-xs text-slate-500">En los resultados cargados.</p>
       </article>
@@ -101,7 +101,7 @@
                 {{ customer.compras_completadas || 0 }}
               </td>
               <td class="p-4 text-right font-black text-emerald-700">
-                S/ {{ money(customer.gasto_total) }}
+                {{ currencySymbol }} {{ money(customer.gasto_total) }}
               </td>
               <td class="p-4">
                 <div class="flex justify-end gap-2">
@@ -187,10 +187,10 @@
               :value="profile.metricas.compras_completadas"
             /><Metric
               label="Acumulado"
-              :value="'S/ ' + money(profile.metricas.gasto_total)"
+              :value="currencySymbol + ' ' + money(profile.metricas.gasto_total)"
             /><Metric
               label="Ticket promedio"
-              :value="'S/ ' + money(profile.metricas.ticket_promedio)"
+              :value="currencySymbol + ' ' + money(profile.metricas.ticket_promedio)"
             /><Metric
               label="Última compra"
               :value="formatDate(profile.metricas.ultima_compra)"
@@ -214,7 +214,7 @@
                   </p>
                 </div>
                 <strong class="text-emerald-700"
-                  >S/ {{ money(sale.total) }}</strong
+                  >{{ currencySymbol }} {{ money(sale.total) }}</strong
                 >
               </article>
             </div>
@@ -302,6 +302,7 @@ import PageHeader from "../components/ui/PageHeader.vue";
 import Metric from "../components/ui/MetricCard.vue";
 import EmptyState from "../components/ui/EmptyState.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
 const customers = ref([]),
   profile = ref(null),
   loading = ref(false),
@@ -324,6 +325,7 @@ const empty = () => ({
 const form = ref(empty());
 let timer;
 const money = (value) => Number(value || 0).toFixed(2);
+const { currencySymbol } = useBusinessConfig();
 const formatDate = (value) =>
   value
     ? new Date(value).toLocaleString("es-PE", { dateStyle: "medium" })

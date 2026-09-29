@@ -7,7 +7,7 @@
     <p
       class="mt-3 text-2xl font-semibold tracking-tight text-slate-950 tabular-nums"
     >
-      {{ currency ? "S/ " + Number(value || 0).toFixed(2) : (value ?? "—") }}
+      {{ currency ? currencySymbol + " " + Number(value || 0).toFixed(2) : (value ?? "—") }}
     </p>
     <p v-if="detail" class="mt-2 text-[11px] leading-5 text-slate-500">
       {{ detail }}
@@ -15,6 +15,8 @@
   </article>
 </template>
 <script setup>
+import { useBusinessConfig } from "../../composables/useBusinessConfig";
+const { currencySymbol } = useBusinessConfig();
 defineProps({
   label: String,
   value: [String, Number],

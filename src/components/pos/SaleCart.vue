@@ -62,7 +62,7 @@
                 {{ item.nombre }}
               </p>
               <p class="text-[10px] text-slate-500">
-                S/ {{ money(item.precio_unitario) }} por unidad
+                {{ currencySymbol }} {{ money(item.precio_unitario) }} por unidad
               </p>
               <p
                 v-if="item.requiere_receta"
@@ -106,7 +106,7 @@
               </button>
             </div>
             <strong class="text-sm font-semibold text-slate-950 tabular-nums"
-              >S/ {{ money(item.cantidad * item.precio_unitario) }}</strong
+              >{{ currencySymbol }} {{ money(item.cantidad * item.precio_unitario) }}</strong
             >
           </div>
         </li>
@@ -148,7 +148,7 @@
         </div>
         <strong
           class="text-[28px] font-semibold leading-none tracking-tight text-slate-950 tabular-nums"
-          >S/ {{ money(total) }}</strong
+          >{{ currencySymbol }} {{ money(total) }}</strong
         >
       </div>
       <button
@@ -194,6 +194,8 @@ import {
 import AppBadge from "../ui/AppBadge.vue";
 import EmptyState from "../ui/EmptyState.vue";
 import { money } from "../../utils/productPresentation";
+import { useBusinessConfig } from "../../composables/useBusinessConfig";
+const { currencySymbol } = useBusinessConfig();
 const props = defineProps({
   cart: { type: Array, default: () => [] },
   customer: Object,

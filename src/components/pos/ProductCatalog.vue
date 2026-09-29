@@ -165,7 +165,7 @@
           <div class="product-card-footer">
             <strong
               class="text-base font-semibold tracking-tight text-slate-950 tabular-nums"
-              >S/ {{ money(product.precio_venta) }}</strong
+              >{{ currencySymbol }} {{ money(product.precio_venta) }}</strong
             ><button
               class="btn btn-primary !min-h-9 !gap-1 !px-2 !py-2 !text-[10px]"
               :disabled="disabled || sellableStock(product) <= 0"
@@ -202,12 +202,14 @@ import AppBadge from "../ui/AppBadge.vue";
 import EmptyState from "../ui/EmptyState.vue";
 import ProductImage from "../ui/ProductImage.vue";
 import SkeletonLoader from "../ui/SkeletonLoader.vue";
+import { useBusinessConfig } from "../../composables/useBusinessConfig";
 import {
   expiryInfo,
   money,
   requiresPrescription,
   sellableStock,
 } from "../../utils/productPresentation";
+const { currencySymbol } = useBusinessConfig();
 const props = defineProps({
   products: { type: Array, default: () => [] },
   loading: Boolean,

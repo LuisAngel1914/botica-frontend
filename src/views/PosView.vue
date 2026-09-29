@@ -84,7 +84,7 @@
       <span
         >Ver carrito · {{ cart.length }}
         {{ cart.length === 1 ? "producto" : "productos" }}</span
-      ><span>S/ {{ saleTotal.toFixed(2) }} →</span>
+      ><span>{{ currencySymbol }} {{ saleTotal.toFixed(2) }} →</span>
     </button>
     <p class="sr-only" role="status">{{ selectionMessage }}</p>
     <ProductDetailsDialog
@@ -119,6 +119,8 @@ import PrescriptionDialog from "../components/pos/PrescriptionDialog.vue";
 import ProductCatalog from "../components/pos/ProductCatalog.vue";
 import ProductDetailsDialog from "../components/pos/ProductDetailsDialog.vue";
 import SaleCart from "../components/pos/SaleCart.vue";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
+const { currencySymbol } = useBusinessConfig();
 
 const router = useRouter();
 const products = ref([]);

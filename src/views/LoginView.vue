@@ -2,9 +2,9 @@
   <main class="login-layout">
     <section class="login-story">
       <div class="flex items-center gap-3">
-        <span class="brand-mark"><Cross :size="23" /></span>
+        <span class="brand-mark"><img v-if="businessConfig.logo_url" :src="businessConfig.logo_url" alt="" class="h-full w-full rounded-[inherit] object-cover" /><Cross v-else :size="23" /></span>
         <div>
-          <strong class="block text-base font-semibold">Botica L y L</strong
+          <strong class="block text-base font-semibold">{{ businessName }}</strong
           ><span class="text-[11px] text-slate-400">Gestión farmacéutica</span>
         </div>
       </div>
@@ -52,14 +52,14 @@
         </div>
       </div>
       <p class="text-[10px] text-slate-400">
-        © {{ year }} Botica L y L · Gestión comercial
+        © {{ year }} {{ businessName }} · Gestión comercial
       </p>
     </section>
     <section class="login-form-area">
       <div class="w-full max-w-[360px]">
         <div class="mb-12 flex items-center gap-3 lg:hidden">
-          <span class="brand-mark"><Cross :size="22" /></span
-          ><strong class="text-sm">Botica L y L</strong>
+          <span class="brand-mark"><img v-if="businessConfig.logo_url" :src="businessConfig.logo_url" alt="" class="h-full w-full rounded-[inherit] object-cover" /><Cross v-else :size="22" /></span
+          ><strong class="text-sm">{{ businessName }}</strong>
         </div>
         <span
           class="mb-6 grid h-12 w-12 place-items-center rounded-xl border bg-slate-50 text-cyan-700"
@@ -163,10 +163,12 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import api from "../api/axios";
 import { useAuth } from "../composables/useAuth";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
 
 const router = useRouter();
 const route = useRoute();
 const { setSession } = useAuth();
+const { businessConfig, businessName } = useBusinessConfig();
 const email = ref("");
 const password = ref("");
 const error = ref("");
