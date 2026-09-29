@@ -4,7 +4,7 @@
     class="assistant-panel"
     id="assistant-panel"
     role="region"
-    aria-label="Asistente operativo de Botica L y L"
+    :aria-label="`Asistente operativo de ${businessName}`"
   >
     <header class="flex items-center gap-3 bg-slate-950 p-4 text-white">
       <span
@@ -12,7 +12,7 @@
         ><Sparkles :size="18"
       /></span>
       <div class="min-w-0 flex-1">
-        <h2 class="text-sm font-semibold">Asistente de Botica L y L</h2>
+        <h2 class="text-sm font-semibold">Asistente de {{ businessName }}</h2>
         <p class="truncate text-xs text-slate-400">
           Consultas operativas según tu acceso
         </p>
@@ -152,7 +152,7 @@
                     <span class="text-xs font-semibold text-emerald-700"
                       >{{ product.stock_disponible }} vigentes</span
                     ><span class="text-sm font-black text-cyan-700"
-                      >S/ {{ money(product.precio_venta) }}</span
+                      >{{ currencySymbol }} {{ money(product.precio_venta) }}</span
                     >
                   </div>
                 </div>
@@ -211,7 +211,7 @@
     </div>
     <div class="border-t border-slate-200 bg-white p-3">
       <p class="mb-2 text-[11px] leading-4 text-slate-500">
-        Solo responde sobre Botica L y L. No ejecuta cambios, diagnósticos,
+        Solo responde sobre {{ businessName }}. No ejecuta cambios, diagnósticos,
         dosis ni recomendaciones terapéuticas.
       </p>
       <form class="flex gap-2" @submit.prevent="sendMessage">
@@ -251,16 +251,18 @@ import {
 } from "lucide-vue-next";
 import api from "../api/axios";
 import { createAssistantPresentation } from "../utils/assistantPresentation";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
 
 const open = defineModel("open", { type: Boolean, default: false });
 const props = defineProps({ context: { type: String, default: "pos" } });
 const router = useRouter();
+const { businessName, currencySymbol } = useBusinessConfig();
 const loading = ref(false);
 const draft = ref("");
 const chatBox = ref(null);
 const initialMessage = () => ({
   role: "assistant",
-  text: "Hola. Puedo ayudarte con productos, caja, ventas, inventario, clientes, reportes y usuarios, según tus permisos. No atiendo consultas ajenas a Botica L y L ni ejecuto cambios desde este chat.",
+  text: `Hola. Puedo ayudarte con productos, caja, ventas, inventario, clientes, reportes y usuarios, según tus permisos. No atiendo consultas ajenas a ${businessName.value} ni ejecuto cambios desde este chat.`,
 });
 const messages = ref([initialMessage()]);
 const suggestions = computed(

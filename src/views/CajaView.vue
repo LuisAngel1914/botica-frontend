@@ -48,7 +48,7 @@
         <div class="relative max-w-sm">
           <span
             class="absolute left-3 top-2.5 text-sm font-semibold text-slate-400"
-            >S/</span
+            >{{ currencySymbol }}</span
           ><input
             id="opening-amount"
             v-model.number="openingAmount"
@@ -117,7 +117,7 @@
             <span class="text-xs text-slate-400"
               >Saldo calculado por caja, con ajustes registrados</span
             ><strong class="text-3xl font-black"
-              >S/ {{ money(cashData.monto_esperado) }}</strong
+              >{{ currencySymbol }} {{ money(cashData.monto_esperado) }}</strong
             >
           </div>
         </div>
@@ -141,7 +141,7 @@
           <div class="relative max-w-sm">
             <span
               class="absolute left-3 top-2.5 text-sm font-semibold text-slate-400"
-              >S/</span
+              >{{ currencySymbol }}</span
             ><input
               id="closing-amount"
               v-model.number="closingAmount"
@@ -162,7 +162,7 @@
               :class="
                 countedDifference === 0 ? 'text-emerald-700' : 'text-amber-800'
               "
-              >S/ {{ money(countedDifference) }}</strong
+              >{{ currencySymbol }} {{ money(countedDifference) }}</strong
             >
           </p>
           <button
@@ -188,7 +188,7 @@
           <div>
             <h2 class="font-bold text-slate-900">¿Confirmar cierre de caja?</h2>
             <p class="mt-1 text-sm text-slate-500">
-              Esta acción cerrará el turno actual con el monto contado de S/
+              Esta acción cerrará el turno actual con el monto contado de {{ currencySymbol }}
               {{ money(closingAmount) }}.
             </p>
           </div>
@@ -225,6 +225,7 @@ import PageHeader from "../components/ui/PageHeader.vue";
 import Metric from "../components/ui/MetricCard.vue";
 import EmptyState from "../components/ui/EmptyState.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
 
 const status = ref("unknown"),
   loading = ref(true),
@@ -240,6 +241,7 @@ const countedDifference = computed(
     Number(cashData.value.monto_esperado || 0),
 );
 const money = (value) => Number(value || 0).toFixed(2);
+const { currencySymbol } = useBusinessConfig();
 const formatDate = (value) =>
   value
     ? new Date(value).toLocaleString("es-PE", {
@@ -288,7 +290,7 @@ async function closeCashRegister() {
     show(
       "Caja cerrada." +
         (difference !== undefined
-          ? " Diferencia de arqueo: S/ " + money(difference) + "."
+          ? " Diferencia de arqueo: " + currencySymbol.value + " " + money(difference) + "."
           : ""),
     );
     confirmClose.value = false;

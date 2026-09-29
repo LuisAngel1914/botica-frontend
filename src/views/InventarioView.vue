@@ -29,7 +29,7 @@
           {{ expiringLots.length }}
         </p>
         <p class="mt-1 text-xs text-slate-500">
-          Con stock y vencimiento en 60 días.
+          Con stock y vencimiento en {{ expiryDays }} días.
         </p>
       </article>
       <article class="app-card p-5">
@@ -219,7 +219,7 @@
                 ><span v-else class="text-slate-400">Sin lote activo</span>
               </td>
               <td class="p-4 text-right font-bold text-cyan-700">
-                S/ {{ money(product.precio_venta) }}
+                {{ currencySymbol }} {{ money(product.precio_venta) }}
               </td>
               <td class="p-4">
                 <div class="flex justify-end gap-2">
@@ -787,7 +787,9 @@ import ProductImage from "../components/ui/ProductImage.vue";
 import AppBadge from "../components/ui/AppBadge.vue";
 import EmptyState from "../components/ui/EmptyState.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
 const route = useRoute();
+const { expiryDays, currencySymbol } = useBusinessConfig();
 const stockFilter = ref("all");
 const lotsProduct = ref(null);
 const inventoryFilters = [

@@ -146,6 +146,8 @@ import api from "../api/axios";
 import PageHeader from "../components/ui/PageHeader.vue";
 import EmptyState from "../components/ui/EmptyState.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
+const { currencySymbol } = useBusinessConfig();
 const logs = ref([]),
   action = ref(""),
   loading = ref(false),
@@ -232,6 +234,16 @@ const styles = {
     icon: KeyRound,
     class: "bg-amber-100 text-amber-800",
   },
+  "user.password_changed": {
+    label: "Contraseña personal actualizada",
+    icon: KeyRound,
+    class: "bg-emerald-100 text-emerald-800",
+  },
+  "business.settings_updated": {
+    label: "Configuración actualizada",
+    icon: ShieldCheck,
+    class: "bg-cyan-100 text-cyan-800",
+  },
 };
 const actionStyle = (value) =>
   styles[value] || {
@@ -247,19 +259,23 @@ const formatDate = (value) =>
 function summary(log) {
   if (log.metadata?.monto_corregido !== undefined) {
     return (
-      "Original S/ " +
+      "Original " + currencySymbol.value + " " +
       Number(log.metadata.monto_original).toFixed(2) +
-      " → Corregido S/ " +
+      " → Corregido " + currencySymbol.value + " " +
       Number(log.metadata.monto_corregido).toFixed(2)
     );
   }
-  if (log.metadata?.total) return "Total S/ " + Number(log.metadata.total).toFixed(2);
+  if (log.metadata?.total) return "Total " + currencySymbol.value + " " + Number(log.metadata.total).toFixed(2);
   if (log.metadata?.monto_inicial !== undefined)
-    return "Inicial S/ " + Number(log.metadata.monto_inicial).toFixed(2);
+    return "Inicial " + currencySymbol.value + " " + Number(log.metadata.monto_inicial).toFixed(2);
   if (log.metadata?.monto_final !== undefined)
-    return "Final S/ " + Number(log.metadata.monto_final).toFixed(2);
+    return "Final " + currencySymbol.value + " " + Number(log.metadata.monto_final).toFixed(2);
   if (log.action === "user.password_reset")
     return `${Number(log.metadata?.sessions_revoked || 0)} sesión(es) anterior(es) cerrada(s)`;
+  if (log.action === "user.password_changed")
+    return "La persona actualizó su propia contraseña";
+  if (log.action === "business.settings_updated")
+    return `${log.metadata?.campos_modificados?.length || 0} campo(s) actualizado(s)`;
   if (log.metadata?.cantidad !== undefined)
     return `${log.metadata.producto} · ${Number(log.metadata.cantidad)} unidades`;
   return "";

@@ -42,7 +42,7 @@
           @input="update('cantidad', Number($event.target.value))"
       /></label>
       <label
-        ><span class="field-label">Costo unitario · S/</span
+        ><span class="field-label">Costo unitario · {{ currencySymbol }}</span
         ><input
           :value="modelValue.costo_unitario"
           class="field-control"
@@ -75,7 +75,7 @@
       <p class="ml-auto text-xs text-slate-500">
         Subtotal
         <strong class="ml-3 text-sm text-slate-900"
-          >S/
+          >{{ currencySymbol }}
           {{ money(modelValue.cantidad * modelValue.costo_unitario) }}</strong
         >
       </p>
@@ -84,6 +84,8 @@
 </template>
 <script setup>
 import { money } from "../utils/productPresentation";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
+const { currencySymbol } = useBusinessConfig();
 const props = defineProps({
   modelValue: { type: Object, required: true },
   index: Number,

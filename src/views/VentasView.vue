@@ -111,7 +111,7 @@
                 >
               </td>
               <td class="p-4 text-right font-black text-slate-900">
-                S/ {{ money(sale.total || localTotal(sale)) }}
+                {{ currencySymbol }} {{ money(sale.total || localTotal(sale)) }}
               </td>
               <td class="p-4">
                 <div class="flex justify-end gap-2">
@@ -279,10 +279,10 @@
                   </td>
                   <td class="py-3 text-center">{{ item.cantidad }}</td>
                   <td class="py-3 text-right">
-                    S/ {{ money(item.precio_unitario || item.precio) }}
+                    {{ currencySymbol }} {{ money(item.precio_unitario || item.precio) }}
                   </td>
                   <td class="py-3 text-right font-bold">
-                    S/
+                    {{ currencySymbol }}
                     {{
                       money(
                         Number(item.cantidad) *
@@ -297,7 +297,7 @@
           <div class="flex justify-between rounded-xl bg-cyan-50 p-4">
             <span class="font-semibold text-slate-700">Total</span
             ><strong class="text-xl text-cyan-800"
-              >S/
+              >{{ currencySymbol }}
               {{
                 money(selectedSale.total || localTotal(selectedSale))
               }}</strong
@@ -348,7 +348,7 @@
                 </p>
                 <p class="text-xs text-slate-500">
                   Disponible para devolución: {{ returnableQuantity(item) }} ·
-                  S/ {{ money(item.precio_unitario || item.precio) }} c/u
+                  {{ currencySymbol }} {{ money(item.precio_unitario || item.precio) }} c/u
                 </p>
               </div>
               <input
@@ -377,7 +377,7 @@
         <div class="mt-4 flex justify-between rounded-xl bg-amber-50 p-4">
           <span class="font-semibold text-amber-900">Total a reembolsar</span
           ><strong class="text-lg text-amber-900"
-            >S/ {{ money(returnTotal) }}</strong
+            >{{ currencySymbol }} {{ money(returnTotal) }}</strong
           >
         </div>
         <p v-if="returnError" class="mt-2 text-sm text-red-700">
@@ -462,6 +462,7 @@ import InlineNotice from "../components/ui/InlineNotice.vue";
 import PageHeader from "../components/ui/PageHeader.vue";
 import EmptyState from "../components/ui/EmptyState.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
 
 const { isAdmin } = useAuth();
 const sales = ref([]),
@@ -488,6 +489,7 @@ const selectedSale = ref(null),
   returnError = ref(""),
   notice = ref(null);
 const money = (value) => Number(value || 0).toFixed(2);
+const { currencySymbol } = useBusinessConfig();
 const formatDate = (value) =>
   value
     ? new Date(value).toLocaleString("es-PE", {

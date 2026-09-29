@@ -28,7 +28,7 @@
         </div>
         <p class="text-sm text-slate-500">
           Total:
-          <strong class="text-lg text-slate-900">S/ {{ money(total) }}</strong>
+          <strong class="text-lg text-slate-900">{{ currencySymbol }} {{ money(total) }}</strong>
         </p>
       </div>
       <form class="mt-5 space-y-4" @submit.prevent="savePurchase">
@@ -148,7 +148,7 @@
             </div>
             <div class="shrink-0 text-right">
               <strong class="block text-sm text-cyan-700"
-                >S/ {{ money(receipt.total) }}</strong
+                >{{ currencySymbol }} {{ money(receipt.total) }}</strong
               ><button
                 class="mt-2 text-xs font-semibold text-cyan-700 underline underline-offset-4"
                 @click="selectedReceipt = receipt"
@@ -206,12 +206,12 @@
                 </p>
               </td>
               <td class="p-4">{{ item.cantidad }}</td>
-              <td class="p-4">S/ {{ money(item.costo_unitario) }}</td>
+              <td class="p-4">{{ currencySymbol }} {{ money(item.costo_unitario) }}</td>
             </tr>
           </tbody></DataTable
         >
         <p class="p-5 text-right text-lg font-semibold">
-          Total S/ {{ money(selectedReceipt.total) }}
+          Total {{ currencySymbol }} {{ money(selectedReceipt.total) }}
         </p>
       </section></AppDialog
     >
@@ -288,6 +288,7 @@ import InlineNotice from "../components/ui/InlineNotice.vue";
 import PageHeader from "../components/ui/PageHeader.vue";
 import EmptyState from "../components/ui/EmptyState.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
 const suppliers = ref([]),
   products = ref([]),
   purchases = ref([]),
@@ -337,6 +338,7 @@ const total = computed(() =>
   ),
 );
 const money = (value) => Number(value || 0).toFixed(2);
+const { currencySymbol } = useBusinessConfig();
 const formatDate = (value) =>
   value
     ? new Date(value).toLocaleString("es-PE", {

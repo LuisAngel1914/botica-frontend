@@ -46,7 +46,7 @@
         </dl>
         <div class="flex items-center justify-between border-t pt-4">
           <strong class="text-2xl font-semibold"
-            >S/ {{ money(product.precio_venta) }}</strong
+            >{{ currencySymbol }} {{ money(product.precio_venta) }}</strong
           ><button
             class="btn btn-primary"
             :disabled="disabled || sellableStock(product) <= 0"
@@ -65,12 +65,14 @@ import { Plus, X } from "lucide-vue-next";
 import AppDialog from "../ui/AppDialog.vue";
 import AppBadge from "../ui/AppBadge.vue";
 import ProductImage from "../ui/ProductImage.vue";
+import { useBusinessConfig } from "../../composables/useBusinessConfig";
 import {
   expiryInfo,
   money,
   requiresPrescription,
   sellableStock,
 } from "../../utils/productPresentation";
+const { currencySymbol } = useBusinessConfig();
 const props = defineProps({
   open: Boolean,
   product: Object,

@@ -22,7 +22,7 @@
           El cierre original no será modificado.
         </p>
         <p v-if="cash" class="mt-4 rounded-xl bg-slate-50 p-3 text-sm">
-          Original: <strong>S/ {{ money(cash.monto_final) }}</strong>
+          Original: <strong>{{ currencySymbol }} {{ money(cash.monto_final) }}</strong>
         </p>
         <label class="field-label mt-4">Monto corregido</label
         ><input
@@ -62,6 +62,7 @@
 import AppDialog from "../ui/AppDialog.vue";
 import { ref } from "vue";
 import { useAuth } from "../../composables/useAuth";
+import { useBusinessConfig } from "../../composables/useBusinessConfig";
 const { isAdmin } = useAuth();
 import api from "../../api/axios";
 const emit = defineEmits(["saved"]);
@@ -72,6 +73,7 @@ const visible = ref(false),
   saving = ref(false),
   error = ref("");
 const money = (v) => Number(v || 0).toFixed(2);
+const { currencySymbol } = useBusinessConfig();
 async function open() {
   error.value = "";
   try {

@@ -56,7 +56,7 @@
                 {{ operator.ventas_cantidad }}
               </td>
               <td class="p-4 text-right font-black text-emerald-700">
-                S/ {{ money(operator.ventas_monto) }}
+                {{ currencySymbol }} {{ money(operator.ventas_monto) }}
               </td>
               <td class="p-4 text-center">{{ operator.cierres_cantidad }}</td>
               <td class="p-4 text-center">{{ operator.compras_cantidad }}</td>
@@ -367,6 +367,7 @@ import InlineNotice from "../components/ui/InlineNotice.vue";
 import PageHeader from "../components/ui/PageHeader.vue";
 import EmptyState from "../components/ui/EmptyState.vue";
 import SkeletonLoader from "../components/ui/SkeletonLoader.vue";
+import { useBusinessConfig } from "../composables/useBusinessConfig";
 
 const users = ref([]),
   performance = ref([]),
@@ -397,6 +398,7 @@ const blankPasswordForm = () => ({ password: "", password_confirmation: "" });
 const form = ref(blankForm());
 const passwordForm = ref(blankPasswordForm());
 const money = (value) => Number(value || 0).toFixed(2);
+const { currencySymbol } = useBusinessConfig();
 function show(message, type = "success") {
   notice.value = { message, type };
 }
