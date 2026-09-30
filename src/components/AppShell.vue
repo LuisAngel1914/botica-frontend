@@ -3,7 +3,7 @@
     <a href="#main-content" class="skip-link">Saltar al contenido</a>
     <aside class="workspace-sidebar">
       <RouterLink :to="homePath" class="flex items-center gap-3 px-2"
-        ><span class="brand-mark"><img v-if="businessConfig.logo_url" :src="businessConfig.logo_url" alt="" class="h-full w-full rounded-[inherit] object-cover" /><Cross v-else :size="23" /></span
+        ><span class="brand-mark"><img v-if="businessConfig.logo_url" :src="businessConfig.logo_url" alt="" class="h-full w-full rounded-[inherit] object-contain" /><Cross v-else :size="23" /></span
         ><span
           ><strong class="block text-sm font-semibold text-white"
             >{{ businessName }}</strong

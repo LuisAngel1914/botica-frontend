@@ -19,7 +19,7 @@
       <div class="app-card overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 p-6 text-white">
         <div class="flex items-start gap-4">
           <div class="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-950/30">
-            <img v-if="form.logo_url" :src="form.logo_url" alt="Logo de la botica" class="h-full w-full object-cover" />
+            <img v-if="form.logo_url" :src="form.logo_url" alt="Logo de la botica" class="h-full w-full object-contain" />
             <Cross v-else :size="28" />
           </div>
           <div class="min-w-0">
