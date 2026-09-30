@@ -399,7 +399,7 @@ async function downloadTicket(saleId) {
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = "ticket-" + saleId + ".html";
+    link.download = "ticket-interno-" + saleId + ".html";
     link.click();
     URL.revokeObjectURL(url);
   } catch {
