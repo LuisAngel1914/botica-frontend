@@ -2,7 +2,7 @@
   <main class="login-layout">
     <section class="login-story">
       <div class="flex items-center gap-3">
-        <span class="brand-mark"><img v-if="businessConfig.logo_url" :src="businessConfig.logo_url" alt="" class="h-full w-full rounded-[inherit] object-cover" /><Cross v-else :size="23" /></span>
+        <span class="brand-mark"><img v-if="businessConfig.logo_url" :src="businessConfig.logo_url" alt="" class="h-full w-full rounded-[inherit] object-contain" /><Cross v-else :size="23" /></span>
         <div>
           <strong class="block text-base font-semibold">{{ businessName }}</strong
           ><span class="text-[11px] text-slate-400">Gestión farmacéutica</span>
@@ -58,7 +58,7 @@
     <section class="login-form-area">
       <div class="w-full max-w-[360px]">
         <div class="mb-12 flex items-center gap-3 lg:hidden">
-          <span class="brand-mark"><img v-if="businessConfig.logo_url" :src="businessConfig.logo_url" alt="" class="h-full w-full rounded-[inherit] object-cover" /><Cross v-else :size="22" /></span
+          <span class="brand-mark"><img v-if="businessConfig.logo_url" :src="businessConfig.logo_url" alt="" class="h-full w-full rounded-[inherit] object-contain" /><Cross v-else :size="22" /></span
           ><strong class="text-sm">{{ businessName }}</strong>
         </div>
         <span
