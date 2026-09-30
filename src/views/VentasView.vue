@@ -3,7 +3,7 @@
     <PageHeader
       eyebrow="Operaciones comerciales"
       title="Historial de ventas"
-      description="Consulta, filtra y reimprime comprobantes. Las anulaciones requieren autorización y motivo."
+      description="Consulta, filtra y reimprime tickets internos. Las anulaciones requieren autorización y motivo."
     />
 
     <InlineNotice :notice="notice" @dismiss="notice = null" />
@@ -124,7 +124,7 @@
                     class="btn btn-secondary !px-3 !py-2 text-xs"
                     @click="downloadTicket(sale.id)"
                   >
-                    Ticket</button
+                    Ticket interno</button
                   ><button
                     v-if="canReturn(sale)"
                     class="btn !bg-amber-600 !px-3 !py-2 text-xs !text-white hover:!bg-amber-700"
@@ -640,7 +640,7 @@ async function downloadTicket(id) {
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = "ticket-venta-" + id + ".html";
+    link.download = "ticket-interno-venta-" + id + ".html";
     link.click();
     URL.revokeObjectURL(url);
   } catch {
