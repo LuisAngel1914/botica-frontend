@@ -169,7 +169,7 @@
       <p
         class="mt-2.5 flex items-center justify-center gap-1 text-[9px] text-slate-500"
       >
-        <ShieldCheck :size="11" />Registro de venta y ticket al finalizar
+        <ShieldCheck :size="11" />Genera boleta demostrativa al finalizar
       </p>
     </footer>
   </aside>

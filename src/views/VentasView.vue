@@ -74,10 +74,11 @@
               class="hover:bg-slate-50/70"
             >
               <td class="p-4">
-                <p class="font-bold text-slate-800">#{{ sale.id }}</p>
+                <p class="font-bold text-slate-800">{{ sale.comprobante?.numero || "Venta #" + sale.id }}</p>
                 <p class="mt-0.5 text-xs text-slate-500">
                   {{ formatDate(sale.created_at) }}
                 </p>
+                <span v-if="sale.comprobante?.modo === 'demo'" class="mt-1 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800">Pruebas · no SUNAT</span>
               </td>
               <td class="p-4">
                 <p class="font-semibold text-slate-700">
@@ -124,7 +125,7 @@
                     class="btn btn-secondary !px-3 !py-2 text-xs"
                     @click="downloadTicket(sale.id)"
                   >
-                    Ticket</button
+                    Imprimir boleta</button
                   ><button
                     v-if="canReturn(sale)"
                     class="btn !bg-amber-600 !px-3 !py-2 text-xs !text-white hover:!bg-amber-700"
@@ -239,6 +240,21 @@
                 selectedSale.estado === "anulada" ? "Anulada" : "Completada"
               }}</strong>
             </p>
+            <p>
+              <span class="text-slate-500">Comprobante</span><br /><strong>{{ selectedSale.comprobante?.numero || "Sin comprobante" }}</strong>
+            </p>
+            <p>
+              <span class="text-slate-500">Entorno tributario</span><br /><strong>{{ selectedSale.comprobante?.modo === "demo" ? "Pruebas · no enviado a SUNAT" : "Producción" }}</strong>
+            </p>
+          </div>
+          <div v-if="selectedSale.comprobante?.eventos?.length" class="rounded-xl border border-slate-200 p-4">
+            <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Trazabilidad del comprobante</p>
+            <ol class="mt-3 space-y-2">
+              <li v-for="event in selectedSale.comprobante.eventos" :key="event.id" class="flex items-start justify-between gap-4 text-xs">
+                <span><strong class="text-slate-800">{{ eventLabel(event.evento) }}</strong><br><span class="text-slate-500">{{ event.detalles?.mensaje || event.detalles?.motivo || "Estado registrado" }}</span></span>
+                <time class="shrink-0 text-slate-400">{{ formatDate(event.created_at) }}</time>
+              </li>
+            </ol>
           </div>
           <div class="overflow-x-auto">
             <DataTable class="w-full min-w-[460px] text-sm"
@@ -516,6 +532,11 @@ const paymentClass = (method) =>
     : method === "Yape"
       ? "bg-violet-50 text-violet-700"
       : "bg-cyan-50 text-cyan-700";
+const eventLabel = (event) =>
+  ({
+    "demo.generated": "Boleta demostrativa generada",
+    "demo.cancelled": "Boleta demostrativa anulada",
+  })[event] || event;
 const filteredSales = computed(() => sales.value);
 const returnTotal = computed(() =>
   (saleToReturn.value?.detalles || []).reduce(
@@ -640,11 +661,11 @@ async function downloadTicket(id) {
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = "ticket-venta-" + id + ".html";
+    link.download = "boleta-demostrativa-venta-" + id + ".html";
     link.click();
     URL.revokeObjectURL(url);
   } catch {
-    show("No se pudo descargar el ticket.", "error");
+    show("No se pudo descargar la boleta demostrativa.", "error");
   }
 }
 onMounted(loadSales);

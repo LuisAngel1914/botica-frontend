@@ -399,12 +399,12 @@ async function downloadTicket(saleId) {
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = "ticket-" + saleId + ".html";
+    link.download = "boleta-demostrativa-" + saleId + ".html";
     link.click();
     URL.revokeObjectURL(url);
   } catch {
     notify(
-      "La venta fue registrada, pero no se pudo descargar el ticket.",
+      "La venta fue registrada, pero no se pudo descargar la boleta demostrativa.",
       "error",
     );
   }

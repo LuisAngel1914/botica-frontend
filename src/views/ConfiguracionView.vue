@@ -3,7 +3,7 @@
     <PageHeader
       eyebrow="Administración"
       title="Configuración de la botica"
-      description="Personaliza la identidad, comprobantes y reglas operativas de esta instalación."
+      description="Personaliza la identidad, el entorno demostrativo de comprobantes y las reglas operativas."
     >
       <template #actions>
         <button class="btn btn-primary" form="business-settings" :disabled="saving || loading">
@@ -30,9 +30,9 @@
         </div>
         <div class="mt-8 grid gap-3 text-xs text-slate-300 sm:grid-cols-2">
           <p><span class="text-slate-500">RUC</span><br /><strong class="text-white">{{ form.ruc || "Pendiente" }}</strong></p>
-          <p><span class="text-slate-500">Comprobantes</span><br /><strong class="text-white">{{ form.serie_comprobante || "B001" }}-000001</strong></p>
+          <p><span class="text-slate-500">Boleta demostrativa</span><br /><strong class="text-white">{{ form.serie_comprobante || "B001" }}-00000001</strong></p>
           <p><span class="text-slate-500">Moneda</span><br /><strong class="text-white">{{ form.simbolo_moneda }} · {{ form.moneda }}</strong></p>
-          <p><span class="text-slate-500">Impuesto</span><br /><strong class="text-white">{{ form.impuesto_nombre }} {{ form.impuesto_porcentaje }}%</strong></p>
+          <p><span class="text-slate-500">Régimen y entorno</span><br /><strong class="text-white">{{ form.regimen_tributario }} · {{ form.modo_emision_comprobantes === "demo" ? "Pruebas" : "Producción" }}</strong></p>
         </div>
       </div>
 
@@ -78,12 +78,18 @@
         <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           <label class="block"><span class="field-label">Moneda</span><select v-model="form.moneda" class="field-control"><option value="PEN">Sol peruano (PEN)</option><option value="USD">Dólar (USD)</option></select></label>
           <label class="block"><span class="field-label">Símbolo</span><input v-model.trim="form.simbolo_moneda" class="field-control" required maxlength="5" /></label>
-          <label class="block"><span class="field-label">Nombre del impuesto</span><input v-model.trim="form.impuesto_nombre" class="field-control" required maxlength="20" /></label>
-          <label class="block"><span class="field-label">Impuesto (%)</span><input v-model.number="form.impuesto_porcentaje" class="field-control" type="number" min="0" max="100" step="0.01" required /></label>
-          <label class="block"><span class="field-label">Serie de comprobante</span><input v-model.trim="form.serie_comprobante" class="field-control uppercase" pattern="[A-Z0-9-]+" maxlength="10" required /></label>
+          <label class="block"><span class="field-label">Régimen tributario</span><select v-model="form.regimen_tributario" class="field-control"><option value="NRUS">Nuevo RUS</option><option value="RER">Régimen Especial</option><option value="RMT">Régimen MYPE Tributario</option><option value="GENERAL">Régimen General</option></select></label>
+          <label class="block"><span class="field-label">Entorno de emisión</span><select v-model="form.modo_emision_comprobantes" class="field-control"><option value="demo">Pruebas · sin envío a SUNAT</option><option value="produccion" disabled>Producción · pendiente de credenciales</option></select></label>
+          <label class="block"><span class="field-label">Tipo de comprobante</span><select v-model="form.tipo_comprobante_predeterminado" class="field-control"><option value="boleta">Boleta de venta</option></select></label>
+          <label class="block"><span class="field-label">Serie demostrativa</span><input v-model.trim="form.serie_comprobante" class="field-control uppercase" pattern="[A-Z0-9-]+" maxlength="10" required /></label>
+          <label class="block"><span class="field-label">Referencia tributaria</span><input v-model.trim="form.impuesto_nombre" class="field-control" required maxlength="20" /></label>
+          <label class="block"><span class="field-label">Tasa de referencia (%)</span><input v-model.number="form.impuesto_porcentaje" class="field-control" type="number" min="0" max="100" step="0.01" required /></label>
           <label class="block"><span class="field-label">Stock mínimo predeterminado</span><input v-model.number="form.stock_minimo_default" class="field-control" type="number" min="0" required /></label>
           <label class="block"><span class="field-label">Alerta de vencimiento (días)</span><input v-model.number="form.dias_alerta_vencimiento" class="field-control" type="number" min="1" max="365" required /></label>
           <label class="block xl:col-span-4"><span class="field-label">Mensaje al pie del ticket</span><input v-model.trim="form.mensaje_ticket" class="field-control" maxlength="255" required /></label>
+        </div>
+        <div class="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-5 text-amber-900">
+          Las boletas generadas actualmente estarán marcadas como <strong>modo pruebas y sin validez tributaria</strong>. El entorno productivo se habilitará después de configurar credenciales, certificado y proveedor oficial.
         </div>
       </section>
     </form>
@@ -99,7 +105,7 @@ import PageHeader from "../components/ui/PageHeader.vue";
 import InlineNotice from "../components/ui/InlineNotice.vue";
 
 const requiredFields = { nombre_comercial: "nombre comercial", razon_social: "razón social", ruc: "RUC", direccion: "dirección", telefono: "teléfono", email: "correo" };
-const form = reactive({ nombre_comercial: "", razon_social: "", ruc: "", direccion: "", telefono: "", email: "", logo_url: "", moneda: "PEN", simbolo_moneda: "S/", impuesto_nombre: "IGV", impuesto_porcentaje: 18, serie_comprobante: "B001", stock_minimo_default: 5, dias_alerta_vencimiento: 60, mensaje_ticket: "Gracias por su preferencia. Conserve su ticket para reclamos." });
+const form = reactive({ nombre_comercial: "", razon_social: "", ruc: "", direccion: "", telefono: "", email: "", logo_url: "", moneda: "PEN", simbolo_moneda: "S/", regimen_tributario: "NRUS", modo_emision_comprobantes: "demo", tipo_comprobante_predeterminado: "boleta", impuesto_nombre: "IGV", impuesto_porcentaje: 18, serie_comprobante: "B001", stock_minimo_default: 5, dias_alerta_vencimiento: 60, mensaje_ticket: "Gracias por su preferencia. Conserve su ticket para reclamos." });
 const loading = ref(true);
 const saving = ref(false);
 const notice = ref(null);
