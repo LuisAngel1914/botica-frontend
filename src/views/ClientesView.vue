@@ -57,7 +57,75 @@
         />
       </div>
       <SkeletonLoader v-if="loading" label="Cargando clientes…" />
-      <div v-else-if="customers.length" class="overflow-x-auto">
+      <div v-else-if="customers.length">
+        <div
+          class="divide-y divide-slate-100 md:hidden"
+          data-testid="mobile-customers-list"
+        >
+          <article
+            v-for="customer in customers"
+            :key="customer.id"
+            class="space-y-4 p-4"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="break-words font-bold text-slate-900">
+                  {{ customer.nombre_razon_social }}
+                </p>
+                <p class="mt-1 font-mono text-xs text-slate-500">
+                  {{ customer.tipo_documento }} · {{ customer.numero_documento }}
+                </p>
+              </div>
+              <span class="shrink-0 rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-bold text-cyan-800">
+                {{ customer.compras_completadas || 0 }} compras
+              </span>
+            </div>
+
+            <dl class="grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-3 text-sm">
+              <div>
+                <dt class="text-xs font-medium text-slate-500">Teléfono</dt>
+                <dd class="mt-1 break-words font-semibold text-slate-800">
+                  {{ customer.telefono || "No registrado" }}
+                </dd>
+              </div>
+              <div class="text-right">
+                <dt class="text-xs font-medium text-slate-500">Acumulado</dt>
+                <dd class="mt-1 font-black text-emerald-700">
+                  {{ currencySymbol }} {{ money(customer.gasto_total) }}
+                </dd>
+              </div>
+              <div class="col-span-2">
+                <dt class="text-xs font-medium text-slate-500">Correo</dt>
+                <dd class="mt-1 break-all text-slate-700">
+                  {{ customer.email || "No registrado" }}
+                </dd>
+              </div>
+              <div class="col-span-2">
+                <dt class="text-xs font-medium text-slate-500">Dirección</dt>
+                <dd class="mt-1 break-words text-slate-700">
+                  {{ customer.direccion || "No registrada" }}
+                </dd>
+              </div>
+            </dl>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                class="btn btn-secondary min-w-0 !px-3 !py-2.5 text-xs"
+                @click="openProfile(customer)"
+              >
+                Ver perfil
+              </button>
+              <button
+                class="btn btn-secondary min-w-0 !px-3 !py-2.5 text-xs"
+                @click="openEditor(customer)"
+              >
+                Editar
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <div class="hidden overflow-x-auto md:block" data-testid="desktop-customers-table">
         <DataTable class="w-full min-w-[760px] text-left text-sm"
           ><thead
             class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500"
@@ -121,6 +189,7 @@
             </tr>
           </tbody></DataTable
         >
+        </div>
       </div>
       <EmptyState
         v-else
@@ -130,7 +199,8 @@
       />
       <div
         v-if="lastPage > 1"
-        class="flex items-center justify-between border-t border-slate-100 p-4"
+        data-testid="customers-pagination"
+        class="flex flex-col gap-3 border-t border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between"
       >
         <span class="text-sm text-slate-500"
           >Página {{ page }} de {{ lastPage }}</span

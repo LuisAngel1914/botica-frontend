@@ -109,7 +109,8 @@
     </section>
     <div
       v-if="pagination.last_page > 1"
-      class="flex items-center justify-between"
+      data-testid="activity-pagination"
+      class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
     >
       <p class="text-sm text-slate-500">
         Página {{ pagination.current_page }} de {{ pagination.last_page }}

@@ -155,7 +155,100 @@
         >
       </div>
       <SkeletonLoader v-if="loading" label="Cargando inventario…" />
-      <div v-else-if="filteredProducts.length" class="overflow-x-auto">
+      <div v-else-if="filteredProducts.length">
+        <div
+          class="divide-y divide-slate-100 md:hidden"
+          data-testid="mobile-inventory-list"
+        >
+          <article
+            v-for="product in filteredProducts"
+            :key="product.id"
+            class="space-y-4 p-4"
+            :class="{ 'bg-cyan-50/70': alertProductId === product.id }"
+          >
+            <div class="flex items-start gap-3">
+              <ProductImage
+                class="h-16 w-20 shrink-0 rounded-xl"
+                :src="product.imagen_url"
+                :name="product.nombre"
+              />
+              <div class="min-w-0 flex-1">
+                <p class="break-words font-bold text-slate-900">
+                  {{ product.nombre }}
+                </p>
+                <p class="mt-0.5 text-xs text-slate-500">
+                  {{ product.presentacion || "Sin presentación" }}
+                </p>
+                <p class="mt-1 break-all font-mono text-xs text-slate-400">
+                  {{ product.codigo_barras || "Sin código de barras" }}
+                </p>
+              </div>
+              <span
+                class="shrink-0 rounded-full px-2.5 py-1 text-xs font-black"
+                :class="
+                  isLow(product)
+                    ? 'bg-red-50 text-red-700'
+                    : 'bg-emerald-50 text-emerald-700'
+                "
+              >{{ product.stock_actual }} un.</span>
+            </div>
+
+            <dl class="grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-3 text-sm">
+              <div>
+                <dt class="text-xs font-medium text-slate-500">Stock mínimo</dt>
+                <dd class="mt-1 font-bold text-slate-800">
+                  {{ product.stock_minimo }} unidades
+                </dd>
+              </div>
+              <div class="text-right">
+                <dt class="text-xs font-medium text-slate-500">Precio</dt>
+                <dd class="mt-1 font-black text-cyan-700">
+                  {{ currencySymbol }} {{ money(product.precio_venta) }}
+                </dd>
+              </div>
+              <div class="col-span-2">
+                <dt class="text-xs font-medium text-slate-500">
+                  Próximo vencimiento
+                </dt>
+                <dd v-if="nextLot(product)" class="mt-1 text-slate-700">
+                  <strong>{{ formatDate(nextLot(product).fecha_vencimiento) }}</strong>
+                  · Lote {{ nextLot(product).numero_lote }}
+                </dd>
+                <dd v-else class="mt-1 text-slate-400">Sin lote activo</dd>
+              </div>
+            </dl>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                class="btn btn-secondary min-w-0 !px-3 !py-2.5 text-xs"
+                @click="lotsProduct = product"
+              >
+                Ver lotes
+              </button>
+              <button
+                class="btn btn-secondary min-w-0 !px-3 !py-2.5 text-xs"
+                @click="openLot(product)"
+              >
+                Agregar lote
+              </button>
+              <button
+                v-if="expiredLotsForProduct(product).length"
+                class="btn min-w-0 !bg-red-600 !px-3 !py-2.5 text-xs !text-white hover:!bg-red-700"
+                @click="openDisposal(product, expiredLotsForProduct(product)[0])"
+              >
+                Registrar baja
+              </button>
+              <button
+                class="btn btn-secondary min-w-0 !px-3 !py-2.5 text-xs"
+                @click="openProduct(product)"
+              >
+                Editar
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <div class="hidden overflow-x-auto md:block" data-testid="desktop-inventory-table">
         <DataTable class="w-full min-w-[800px] text-left text-sm"
           ><thead
             class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500"
@@ -252,6 +345,7 @@
             </tr>
           </tbody></DataTable
         >
+        </div>
       </div>
       <EmptyState
         v-else
@@ -370,7 +464,8 @@
         <article
           v-for="movement in movements"
           :key="movement.id"
-          class="flex items-center gap-3 p-4"
+          data-testid="inventory-movement"
+          class="flex flex-wrap items-start gap-3 p-4 sm:flex-nowrap sm:items-center"
         >
           <span
             class="grid h-10 w-10 place-items-center rounded-xl text-xs font-black"
@@ -397,7 +492,7 @@
               Responsable: {{ movement.user?.name || "No disponible" }}
             </p>
           </div>
-          <time class="text-right text-xs text-slate-400">{{
+          <time class="w-full pl-[52px] text-left text-xs text-slate-400 sm:w-auto sm:pl-0 sm:text-right">{{
             formatDateTime(movement.created_at)
           }}</time>
         </article>
@@ -407,7 +502,8 @@
       </div>
       <div
         v-if="movementMeta.last_page > 1"
-        class="flex items-center justify-between border-t border-slate-100 p-4 text-sm"
+        data-testid="inventory-pagination"
+        class="flex flex-col gap-3 border-t border-slate-100 p-4 text-sm sm:flex-row sm:items-center sm:justify-between"
       >
         <span class="text-slate-500"
           >Página {{ movementMeta.current_page }} de

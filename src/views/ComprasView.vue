@@ -72,9 +72,9 @@
         <button class="btn btn-secondary" type="button" @click="addItem">
           + Agregar producto
         </button>
-        <div class="flex justify-end">
+        <div class="flex justify-stretch sm:justify-end">
           <button
-            class="btn btn-primary"
+            class="btn btn-primary w-full sm:w-auto"
             :disabled="saving"
           >
             {{ saving ? "Recibiendo…" : "Confirmar recepción" }}
@@ -93,7 +93,7 @@
           <div
             v-for="supplier in suppliers"
             :key="supplier.id"
-            class="flex items-center justify-between gap-3 p-4"
+            class="flex flex-col items-start gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
           >
             <div class="min-w-0">
               <p class="truncate font-bold text-slate-800">
@@ -133,7 +133,7 @@
           <div
             v-for="receipt in filteredReceipts"
             :key="receipt.id"
-            class="flex items-center justify-between gap-3 p-4"
+            class="flex flex-col items-start gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
               <p class="font-bold text-slate-800">
@@ -146,7 +146,7 @@
                 >
               </p>
             </div>
-            <div class="shrink-0 text-right">
+            <div class="shrink-0 self-end text-right sm:self-auto">
               <strong class="block text-sm text-cyan-700"
                 >{{ currencySymbol }} {{ money(receipt.total) }}</strong
               ><button
@@ -189,6 +189,25 @@
             Cerrar
           </button>
         </header>
+        <div class="divide-y divide-slate-100 sm:hidden" data-testid="mobile-purchase-detail">
+          <article
+            v-for="item in selectedReceipt.detalles || []"
+            :key="item.id"
+            class="space-y-2 p-4"
+          >
+            <p class="font-semibold text-slate-900">
+              {{ item.producto?.nombre }}
+            </p>
+            <p class="text-xs text-slate-500">
+              {{ item.numero_lote || "Lote registrado en inventario" }}
+            </p>
+            <div class="flex items-center justify-between rounded-lg bg-slate-50 p-3 text-sm">
+              <span>{{ item.cantidad }} unidades</span>
+              <strong>{{ currencySymbol }} {{ money(item.costo_unitario) }} c/u</strong>
+            </div>
+          </article>
+        </div>
+        <div class="hidden sm:block" data-testid="desktop-purchase-detail">
         <DataTable label="Productos recibidos"
           ><thead>
             <tr>
@@ -210,6 +229,7 @@
             </tr>
           </tbody></DataTable
         >
+        </div>
         <p class="p-5 text-right text-lg font-semibold">
           Total {{ currencySymbol }} {{ money(selectedReceipt.total) }}
         </p>
