@@ -70,6 +70,22 @@ afterEach(() => {
 });
 
 describe("Sales traceability actions", () => {
+  it("renders a dedicated mobile list without replacing the desktop table", async () => {
+    await start();
+
+    const mobileList = wrapper.get('[data-testid="mobile-sales-list"]');
+    const desktopTable = wrapper.get('[data-testid="desktop-sales-table"]');
+
+    expect(mobileList.classes()).toContain("md:hidden");
+    expect(mobileList.text()).toContain("Venta #21");
+    expect(mobileList.text()).toContain("Cliente de aceptación");
+    expect(mobileList.text()).toContain("42092755");
+    expect(mobileList.text()).toContain("S/ 20.00");
+    expect(mobileList.text()).toContain("Ver detalle");
+    expect(desktopTable.classes()).toContain("md:block");
+    expect(desktopTable.find("table").exists()).toBe(true);
+  });
+
   it("downloads the selected operation with an explicit internal-ticket name", async () => {
     await start();
     api.get.mockResolvedValueOnce({ data: "<html>ticket</html>" });
