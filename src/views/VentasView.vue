@@ -53,7 +53,98 @@
         >
       </header>
       <SkeletonLoader v-if="loading" label="Cargando ventas…" />
-      <div v-else-if="filteredSales.length" class="overflow-x-auto">
+      <div v-else-if="filteredSales.length">
+        <div
+          class="divide-y divide-slate-100 md:hidden"
+          data-testid="mobile-sales-list"
+        >
+          <article
+            v-for="sale in filteredSales"
+            :key="sale.id"
+            class="space-y-4 p-4"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Venta #{{ sale.id }}
+                </p>
+                <p class="mt-1 text-sm font-bold text-slate-900">
+                  {{ formatDate(sale.created_at) }}
+                </p>
+              </div>
+              <span
+                class="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold"
+                :class="
+                  sale.estado === 'anulada'
+                    ? 'bg-red-50 text-red-700'
+                    : 'bg-emerald-50 text-emerald-700'
+                "
+              >{{ sale.estado === "anulada" ? "Anulada" : "Completada" }}</span>
+            </div>
+
+            <dl class="grid grid-cols-2 gap-x-4 gap-y-3 rounded-xl bg-slate-50 p-3 text-sm">
+              <div class="col-span-2">
+                <dt class="text-xs font-medium text-slate-500">Cliente</dt>
+                <dd class="mt-0.5 break-words font-semibold text-slate-800">
+                  {{ clientName(sale) }}
+                </dd>
+                <dd v-if="clientDocument(sale)" class="mt-0.5 text-xs text-slate-500">
+                  {{ clientDocument(sale) }}
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs font-medium text-slate-500">Método de pago</dt>
+                <dd class="mt-1">
+                  <span
+                    class="inline-flex rounded-lg px-2.5 py-1 text-xs font-bold"
+                    :class="paymentClass(sale.metodo_pago)"
+                  >{{ sale.metodo_pago }}</span>
+                </dd>
+              </div>
+              <div class="text-right">
+                <dt class="text-xs font-medium text-slate-500">Total</dt>
+                <dd class="mt-1 text-lg font-black text-slate-950">
+                  {{ currencySymbol }} {{ money(sale.total || localTotal(sale)) }}
+                </dd>
+              </div>
+            </dl>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                class="btn btn-secondary min-w-0 !px-3 !py-2.5 text-xs"
+                @click="openDetail(sale)"
+              >
+                Ver detalle
+              </button>
+              <button
+                class="btn btn-secondary min-w-0 !px-3 !py-2.5 text-xs"
+                @click="downloadTicket(sale.id)"
+              >
+                Ticket interno
+              </button>
+              <button
+                v-if="canReturn(sale)"
+                class="btn min-w-0 !bg-amber-600 !px-3 !py-2.5 text-xs !text-white hover:!bg-amber-700"
+                @click="openReturn(sale)"
+              >
+                Devolver
+              </button>
+              <button
+                v-if="
+                  isAdmin &&
+                  sale.estado !== 'anulada' &&
+                  !(sale.devoluciones || []).length
+                "
+                class="btn min-w-0 !bg-red-600 !px-3 !py-2.5 text-xs !text-white hover:!bg-red-700"
+                @click="openCancel(sale)"
+              >
+                Anular
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <div class="hidden overflow-x-auto md:block" data-testid="desktop-sales-table">
         <DataTable class="w-full min-w-[760px] text-left text-sm">
           <thead
             class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500"
@@ -147,6 +238,7 @@
             </tr>
           </tbody>
         </DataTable>
+        </div>
       </div>
       <EmptyState
         v-else
